@@ -9,6 +9,8 @@ using Debug = UnityEngine.Debug;
 
 public class Map : MonoBehaviour
 {
+    private const float PLAYERTILE_FENCE_EPSILON = 0.4f;
+
     // IMPORTANT  - face0 = faces[0]
     public Tile[] tiles;
     public float rotationSpeed = 200f;
@@ -36,7 +38,7 @@ public class Map : MonoBehaviour
     private Vector3 APPEARING_LEFT_TILE_POSITION = new Vector3(10, 0, 0);
 
     private Vector3 OUT_OF_SIGHT = new Vector3(0, 0, -100F);
-    private float EPSILON = 1f;
+    private float FENCE_DISTANCE_ON_DIFFERENT_TILE_TO_STOP_PLAYER_EPSILON = 1f;
 
     public class TileState
     {
@@ -82,12 +84,40 @@ public class Map : MonoBehaviour
 
     private bool FenceInTheWay(PlayerInput playerInput)
     {
+        // check player tile
+        var playerFence = _previousTileState.Player.Fence;
+
         var playerInputLeft = playerInput.Left;
         var fenceLeft = _previousTileState.Left.Fence;
         var playerInputRight = playerInput.Right;
         var fenceRight = _previousTileState.Right.Fence;
         return CheckIfInputForcesPlayerIntoFence(playerInputLeft, fenceLeft) ||
-               CheckIfInputForcesPlayerIntoFence(playerInputRight, fenceRight);
+               CheckIfInputForcesPlayerIntoFence(playerInputRight, fenceRight) ||
+               CheckIfInputForcesPlayerIntoFenceOnPlayerTile(playerInput, playerFence);
+    }
+
+    private bool CheckIfInputForcesPlayerIntoFenceOnPlayerTile(PlayerInput playerInput, Transform fence)
+    {
+        if (fence != null)
+        {
+            var difference = fence.position - _previousTileState.Player.transform.position;
+            if (playerInput.Left)
+            {
+                if (Vector2.Distance(difference, new Vector3(0.5f, 0, 0)) < PLAYERTILE_FENCE_EPSILON)
+                {
+                    return true;
+                }
+            }
+            else if (playerInput.Left)
+            {
+                if (Vector2.Distance(difference, new Vector3(0, 0, 0.5f)) < PLAYERTILE_FENCE_EPSILON)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private bool CheckIfInputForcesPlayerIntoFence(bool playerInputDir, Transform fence)
@@ -98,8 +128,7 @@ public class Map : MonoBehaviour
             var distance = Vector3.Distance(
                 fence.transform.position,
                 _previousTileState.Player.transform.position);
-            Debug.Log(distance);
-            if (distance < EPSILON)
+            if (distance < FENCE_DISTANCE_ON_DIFFERENT_TILE_TO_STOP_PLAYER_EPSILON)
             {
                 return true;
             }
