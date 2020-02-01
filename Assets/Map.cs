@@ -40,7 +40,6 @@ public class Map : MonoBehaviour
     }
 
 
-
     // Update is called once per frame
     void Update()
     {
@@ -63,6 +62,9 @@ public class Map : MonoBehaviour
         tileState.Player.gameObject.SetActive(true);
         tileState.Left.gameObject.SetActive(true);
         tileState.Right.gameObject.SetActive(true);
+        tileState.Player.gameObject.transform.position = new Vector3(0, 0, 0);
+        tileState.Left.gameObject.transform.position = new Vector3(0, 0, 1.5f);
+        tileState.Right.gameObject.transform.position = new Vector3(1.5f, 0, 0);
     }
 
     // If you want the right tiles, talk to ME
@@ -96,10 +98,12 @@ public class Map : MonoBehaviour
             {
                 playerTile = tiles[i];
             }
+
             if (Vector3.Distance(playerLeft, vector3s[i]) < 0.01f)
             {
                 leftTile = tiles[i];
             }
+
             if (Vector3.Distance(playerRight, vector3s[i]) < 0.01f)
             {
                 rightTile = tiles[i];
@@ -143,11 +147,13 @@ public class Map : MonoBehaviour
         {
             var angleThisFrame = Time.deltaTime * rotationSpeed;
             angleLeft -= angleThisFrame;
-            if (angleLeft < 0) {
+            if (angleLeft < 0)
+            {
                 angleThisFrame += angleLeft;
             }
 
-            _cubeController.transform.Rotate(angleThisFrame * rotation.x, angleThisFrame * rotation.y, angleThisFrame * rotation.z, Space.World);
+            _cubeController.transform.Rotate(angleThisFrame * rotation.x, angleThisFrame * rotation.y,
+                angleThisFrame * rotation.z, Space.World);
             // transform.Rotate(transform.forward, angleThisFrame);
             // transform.rotation = Quaternion.Euler(angleThisFrame * rotation);
 
