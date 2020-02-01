@@ -1,14 +1,18 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.XR.WSA;
+using Debug = UnityEngine.Debug;
 
 public class Map : MonoBehaviour
 {
     // IMPORTANT  - face0 = faces[0]
     public Tile[] tiles;
     public float rotationSpeed = 200f;
-    private float EPSILON = 0.1F;
+
 
     private Tile _currentTile;
     private CubeController _cubeController;
@@ -23,16 +27,35 @@ public class Map : MonoBehaviour
 
     private TileState _previousTileState;
     private Vector3 PLAYER_TILE_POSITION = new Vector3(0, 0, 0);
-    private Vector3 LEFT_TILE_POSITION = new Vector3(0, 0, 1.5f);
-    private Vector3 RIGHT_TILE_POSITION = new Vector3(1.5f, 0, 0);
+    private Vector3 LEFT_TILE_POSITION = new Vector3(1.5f, 0, 0);
+    private Vector3 RIGHT_TILE_POSITION = new Vector3(0, 0, 1.5f);
 
-    private Vector3 DISAPPEARING_RIGHT_TILE_POSITION = new Vector3(0, 0, -10f);
-    private Vector3 DISAPPEARING_LEFT_TILE_POSITION = new Vector3(-10, 0, 0f);
-    private Vector3 APPEARING_RIGHT_TILE_POSITION = new Vector3(10, 0, 0);
-    private Vector3 APPEARING_LEFT_TILE_POSITION = new Vector3(0, 0, 10f);
+    private Vector3 DISAPPEARING_RIGHT_TILE_POSITION = new Vector3(-10, 0, 0);
+    private Vector3 DISAPPEARING_LEFT_TILE_POSITION = new Vector3(0, 0, -10f);
+    private Vector3 APPEARING_RIGHT_TILE_POSITION = new Vector3(0, 0, 10f);
+    private Vector3 APPEARING_LEFT_TILE_POSITION = new Vector3(10, 0, 0);
 
     private Vector3 OUT_OF_SIGHT = new Vector3(0, 0, -100F);
-    private List<Vector3> _allCubeTransforms;
+
+    public class TileState
+    {
+        public Tile Player { get; }
+        public Tile Right { get; }
+        public Tile Left { get; }
+
+        public float RightRotation { get; }
+        public float LeftRotation { get; }
+
+        public TileState(Tile player, Tile right, Tile left, float rightRotation,
+            float leftRotation)
+        {
+            this.Player = player;
+            this.Right = right;
+            this.Left = left;
+            this.RightRotation = rightRotation;
+            this.LeftRotation = leftRotation;
+        }
+    }
 
     void Start()
     {
@@ -41,8 +64,6 @@ public class Map : MonoBehaviour
         {
             tile.gameObject.transform.position = OUT_OF_SIGHT;
         }
-        InitialiseCubeTransformList();
-
         var tileState = MapCubeRotationToTilesVisible();
         var playerGameObject = tileState.Player.gameObject;
         playerGameObject.SetActive(true);
@@ -58,65 +79,14 @@ public class Map : MonoBehaviour
         _previousTileState = tileState;
     }
 
-    private void InitialiseCubeTransformList()
-    {
-        _allCubeTransforms = new List<Vector3>();
-        _transformForward = _cubeController.transform.forward;
-        var _transformBack = -_transformForward;
-        _transformUp = _cubeController.transform.up;
-        var _transformDown = -_transformUp;
-        _transformRight = _cubeController.transform.right;
-        var _transformLeft = -_transformRight;
-
-        _allCubeTransforms.Add(_transformRight);
-        _allCubeTransforms.Add(_transformUp);
-        _allCubeTransforms.Add(_transformLeft);
-        _allCubeTransforms.Add(_transformDown);
-        _allCubeTransforms.Add(_transformBack);
-        _allCubeTransforms.Add(_transformForward);
-    }
-
 
     // Update is called once per frame
     void Update()
     {
         if (!Rotating)
         {
-            PlayerInput playerInput = new PlayerInput(Input.GetKeyDown(KeyCode.LeftArrow), Input.GetKeyDown(KeyCode.RightArrow));
-            // check if can rotate cube. If fence in the way, tile map cannot be rotated.
-            if (!FenceInTheWay(playerInput))
-            {
-                ControlRotateCube(playerInput);
-            }
+            ControlRotateCube();
         }
-    }
-
-    private bool FenceInTheWay(PlayerInput playerInput)
-    {
-        var playerInputLeft = playerInput.Left;
-        var fenceLeft = _previousTileState.Left.Fence;
-        var playerInputRight = playerInput.Right;
-        var fenceRight = _previousTileState.Right.Fence;
-        return CheckIfInputForcesPlayerIntoFence(playerInputLeft, fenceLeft) ||
-            CheckIfInputForcesPlayerIntoFence(playerInputRight, fenceRight);
-    }
-
-    private bool CheckIfInputForcesPlayerIntoFence(bool playerInputDir, Transform fence)
-    {
-        if (playerInputDir && fence != null)
-        {
-            // check the fence is close. Within an expected value?
-            var distance = Vector3.Distance(
-                fence.transform.position,
-                _previousTileState.Player.transform.position);
-            Debug.Log(distance);
-            if (distance < EPSILON)
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private void TransitionAllTiles()
@@ -136,6 +106,14 @@ public class Map : MonoBehaviour
         {
             TransitionLeftMovement(previousTileState, newTileState);
         }
+        
+        rotateY(newTileState.Right.gameObject, newTileState.RightRotation);
+        rotateY(newTileState.Left.gameObject, newTileState.LeftRotation);
+    }
+
+    public void rotateY(GameObject gameObject, float angle)
+    {
+        gameObject.transform.Rotate(0, gameObject.transform.rotation.eulerAngles.y - angle, 0);
     }
 
     private void TransitionLeftMovement(TileState previousTileState, TileState newTileState)
@@ -205,29 +183,63 @@ public class Map : MonoBehaviour
     // If you want the right tiles, talk to ME
     public TileState MapCubeRotationToTilesVisible()
     {
+        var normalVectors = new List<Vector3>();
+        _transformForward = _cubeController.transform.forward;
+        var _transformBack = -_transformForward;
+        _transformUp = _cubeController.transform.up;
+        var _transformDown = -_transformUp;
+        _transformRight = _cubeController.transform.right;
+        var _transformLeft = -_transformRight;
+
+        normalVectors.Add(_transformRight);
+        normalVectors.Add(_transformUp);
+        normalVectors.Add(_transformLeft);
+        normalVectors.Add(_transformDown);
+        normalVectors.Add(_transformBack);
+        normalVectors.Add(_transformForward);
+
+        var upVectors = new List<Vector3>();
+        upVectors.Add(_transformBack);
+        upVectors.Add(_transformBack);
+        upVectors.Add(_transformBack);
+        upVectors.Add(_transformBack);
+        upVectors.Add(_transformDown);
+        upVectors.Add(_transformUp);
 
         Tile playerTile = null;
         Tile leftTile = null;
         Tile rightTile = null;
 
         var playerSquare = new Vector3(0, 1, 0);
-        var playerLeft = new Vector3(0, 0, 1);
-        var playerRight = new Vector3(1, 0, 0);
+        var playerLeft = new Vector3(1, 0, 0);
+        var playerRight = new Vector3(0, 0, 1);
+
+        var leftRotation = 0f;
+        var rightRotation = 0f;
         for (int i = 0; i < 6; i++)
         {
-            if (Vector3.Distance(playerSquare, _allCubeTransforms[i]) < 0.01f)
+            if (Vector3.Distance(playerSquare, normalVectors[i]) < 0.01f)
             {
+                // No Needs For The Changaroo
                 playerTile = tiles[i];
             }
 
-            if (Vector3.Distance(playerLeft, _allCubeTransforms[i]) < 0.01f)
+            if (Vector3.Distance(playerLeft, normalVectors[i]) < 0.01f)
             {
                 leftTile = tiles[i];
+                Vector3 faceUp = upVectors[i];
+                leftRotation = Vector3.SignedAngle(faceUp,
+                                   Vector3.forward,
+                                   Vector3.left) + 180f;
             }
 
-            if (Vector3.Distance(playerRight, _allCubeTransforms[i]) < 0.01f)
+            if (Vector3.Distance(playerRight, normalVectors[i]) < 0.01f)
             {
                 rightTile = tiles[i];
+                Vector3 faceUp = upVectors[i];
+                rightRotation = Vector3.SignedAngle(faceUp,
+                                    Vector3.left,
+                                    Vector3.back) + 90f;
             }
         }
 
@@ -242,16 +254,17 @@ public class Map : MonoBehaviour
             throw new Exception("WTF!?!?!?!?! yOuR tILE iS nUlL?!?!?!?!");
         }
 
-        return new TileState(playerTile, rightTile, leftTile);
+        return new TileState(playerTile, rightTile, leftTile, rightRotation,
+            leftRotation);
     }
 
-    private void ControlRotateCube(PlayerInput playerInput)
+    private void ControlRotateCube()
     {
-        if (playerInput.Right)
+        if (Input.GetKeyDown(KeyCode.RightArrow))
         {
             StartCoroutine(RotateCube(new Vector3(-1, 0, 0)));
         }
-        else if (playerInput.Left)
+        else if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
             StartCoroutine(RotateCube(new Vector3(0, 0, 1)));
         }
