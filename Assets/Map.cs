@@ -28,17 +28,15 @@ public class Map : MonoBehaviour
         public Tile Right { get; }
         public Tile Left { get; }
 
-        public float PlayerRotation { get; }
         public float RightRotation { get; }
         public float LeftRotation { get; }
 
-        public TileState(Tile player, Tile right, Tile left, float playerRotation, float rightRotation,
+        public TileState(Tile player, Tile right, Tile left, float rightRotation,
             float leftRotation)
         {
             this.Player = player;
             this.Right = right;
             this.Left = left;
-            this.PlayerRotation = playerRotation;
             this.RightRotation = rightRotation;
             this.LeftRotation = leftRotation;
         }
@@ -77,7 +75,6 @@ public class Map : MonoBehaviour
         tileState.Right.gameObject.transform.position = new Vector3(0, 0, 1.5f);
         tileState.Left.gameObject.transform.position = new Vector3(1.5f, 0, 0);
 
-        rotateY(tileState.Player.gameObject, tileState.PlayerRotation);
         rotateY(tileState.Right.gameObject, tileState.RightRotation);
         rotateY(tileState.Left.gameObject, tileState.LeftRotation);
     }
@@ -121,19 +118,23 @@ public class Map : MonoBehaviour
         var playerLeft = new Vector3(1, 0, 0);
         var playerRight = new Vector3(0, 0, 1);
 
-        var playerRotation = 0f;
         var leftRotation = 0f;
         var rightRotation = 0f;
         for (int i = 0; i < 6; i++)
         {
             if (Vector3.Distance(playerSquare, normalVectors[i]) < 0.01f)
             {
+                // No Needs For The Changaroo
                 playerTile = tiles[i];
             }
 
             if (Vector3.Distance(playerLeft, normalVectors[i]) < 0.01f)
             {
                 leftTile = tiles[i];
+                Vector3 faceUp = upVectors[i];
+                leftRotation = Vector3.SignedAngle(faceUp,
+                                   Vector3.forward,
+                                   Vector3.left) + 180f;
             }
 
             if (Vector3.Distance(playerRight, normalVectors[i]) < 0.01f)
@@ -159,7 +160,7 @@ public class Map : MonoBehaviour
             throw new Exception("WTF!?!?!?!?! yOu'rE tILE iS nUlL?!?!?!?!");
         }
 
-        return new TileState(playerTile, rightTile, leftTile, playerRotation, rightRotation,
+        return new TileState(playerTile, rightTile, leftTile, rightRotation,
             leftRotation);
     }
 
