@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.XR.WSA;
+using Debug = UnityEngine.Debug;
 
 public class Map : MonoBehaviour
 {
@@ -25,11 +28,19 @@ public class Map : MonoBehaviour
         public Tile Right { get; }
         public Tile Left { get; }
 
-        public TileState(Tile player, Tile right, Tile left)
+        public float PlayerRotation { get; }
+        public float RightRotation { get; }
+        public float LeftRotation { get; }
+
+        public TileState(Tile player, Tile right, Tile left, float playerRotation, float rightRotation,
+            float leftRotation)
         {
             this.Player = player;
             this.Right = right;
             this.Left = left;
+            this.PlayerRotation = playerRotation;
+            this.RightRotation = rightRotation;
+            this.LeftRotation = leftRotation;
         }
     }
 
@@ -60,17 +71,26 @@ public class Map : MonoBehaviour
         }
 
         tileState.Player.gameObject.SetActive(true);
-        tileState.Left.gameObject.SetActive(true);
         tileState.Right.gameObject.SetActive(true);
+        tileState.Left.gameObject.SetActive(true);
         tileState.Player.gameObject.transform.position = new Vector3(0, 0, 0);
-        tileState.Left.gameObject.transform.position = new Vector3(0, 0, 1.5f);
-        tileState.Right.gameObject.transform.position = new Vector3(1.5f, 0, 0);
+        tileState.Right.gameObject.transform.position = new Vector3(0, 0, 1.5f);
+        tileState.Left.gameObject.transform.position = new Vector3(1.5f, 0, 0);
+
+        rotateY(tileState.Player.gameObject, tileState.PlayerRotation);
+        rotateY(tileState.Right.gameObject, tileState.RightRotation);
+        rotateY(tileState.Left.gameObject, tileState.LeftRotation);
+    }
+
+    public void rotateY(GameObject gameObject, float angle)
+    {
+        gameObject.transform.Rotate(0, gameObject.transform.rotation.eulerAngles.y - angle, 0);
     }
 
     // If you want the right tiles, talk to ME
     public TileState MapCubeRotationToTilesVisible()
     {
-        var vector3s = new List<Vector3>();
+        var normalVectors = new List<Vector3>();
         _transformForward = _cubeController.transform.forward;
         var _transformBack = -_transformForward;
         _transformUp = _cubeController.transform.up;
@@ -78,35 +98,51 @@ public class Map : MonoBehaviour
         _transformRight = _cubeController.transform.right;
         var _transformLeft = -_transformRight;
 
-        vector3s.Add(_transformRight);
-        vector3s.Add(_transformUp);
-        vector3s.Add(_transformLeft);
-        vector3s.Add(_transformDown);
-        vector3s.Add(_transformBack);
-        vector3s.Add(_transformForward);
+        normalVectors.Add(_transformRight);
+        normalVectors.Add(_transformUp);
+        normalVectors.Add(_transformLeft);
+        normalVectors.Add(_transformDown);
+        normalVectors.Add(_transformBack);
+        normalVectors.Add(_transformForward);
+
+        var upVectors = new List<Vector3>();
+        upVectors.Add(_transformBack);
+        upVectors.Add(_transformBack);
+        upVectors.Add(_transformBack);
+        upVectors.Add(_transformBack);
+        upVectors.Add(_transformDown);
+        upVectors.Add(_transformUp);
 
         Tile playerTile = null;
         Tile leftTile = null;
         Tile rightTile = null;
 
         var playerSquare = new Vector3(0, 1, 0);
-        var playerLeft = new Vector3(0, 0, 1);
-        var playerRight = new Vector3(1, 0, 0);
+        var playerLeft = new Vector3(1, 0, 0);
+        var playerRight = new Vector3(0, 0, 1);
+
+        var playerRotation = 0f;
+        var leftRotation = 0f;
+        var rightRotation = 0f;
         for (int i = 0; i < 6; i++)
         {
-            if (Vector3.Distance(playerSquare, vector3s[i]) < 0.01f)
+            if (Vector3.Distance(playerSquare, normalVectors[i]) < 0.01f)
             {
                 playerTile = tiles[i];
             }
 
-            if (Vector3.Distance(playerLeft, vector3s[i]) < 0.01f)
+            if (Vector3.Distance(playerLeft, normalVectors[i]) < 0.01f)
             {
                 leftTile = tiles[i];
             }
 
-            if (Vector3.Distance(playerRight, vector3s[i]) < 0.01f)
+            if (Vector3.Distance(playerRight, normalVectors[i]) < 0.01f)
             {
                 rightTile = tiles[i];
+                Vector3 faceUp = upVectors[i];
+                rightRotation = Vector3.SignedAngle(faceUp,
+                                    Vector3.left,
+                                    Vector3.back) + 90f;
             }
         }
 
@@ -123,7 +159,8 @@ public class Map : MonoBehaviour
             throw new Exception("WTF!?!?!?!?! yOu'rE tILE iS nUlL?!?!?!?!");
         }
 
-        return new TileState(playerTile, rightTile, leftTile);
+        return new TileState(playerTile, rightTile, leftTile, playerRotation, rightRotation,
+            leftRotation);
     }
 
     private void ControlRotateCube()
