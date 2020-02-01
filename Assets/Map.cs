@@ -67,6 +67,7 @@ public class Map : MonoBehaviour
         {
             tile.gameObject.transform.position = OUT_OF_SIGHT;
         }
+
         var tileState = MapCubeRotationToTilesVisible();
         var playerGameObject = tileState.Player.gameObject;
         playerGameObject.SetActive(true);
@@ -143,7 +144,8 @@ public class Map : MonoBehaviour
     {
         if (!Rotating)
         {
-            PlayerInput playerInput = new PlayerInput(Input.GetKeyDown(KeyCode.LeftArrow), Input.GetKeyDown(KeyCode.RightArrow));
+            PlayerInput playerInput =
+                new PlayerInput(Input.GetKeyDown(KeyCode.LeftArrow), Input.GetKeyDown(KeyCode.RightArrow));
             if (!FenceInTheWay(playerInput))
             {
                 ControlRotateCube(playerInput);
@@ -168,14 +170,11 @@ public class Map : MonoBehaviour
         {
             TransitionLeftMovement(previousTileState, newTileState);
         }
-
-        rotateY(newTileState.Right.gameObject, newTileState.RightRotation);
-        rotateY(newTileState.Left.gameObject, newTileState.LeftRotation);
     }
 
-    public void rotateY(GameObject gameObject, float angle)
+    public void rotateY(Transform transform, float angle)
     {
-        gameObject.transform.Rotate(0, gameObject.transform.rotation.eulerAngles.y - angle, 0);
+        transform.Rotate(0, transform.rotation.eulerAngles.y - angle, 0);
     }
 
     private void TransitionLeftMovement(TileState previousTileState, TileState newTileState)
@@ -198,6 +197,16 @@ public class Map : MonoBehaviour
                 newTileState.Left.transform,
                 APPEARING_LEFT_TILE_POSITION,
                 LEFT_TILE_POSITION));
+
+        var newRotation = newTileState.RightRotation;
+        if (newRotation < previousTileState.RightRotation)
+        {
+            newRotation += 360;
+        }
+
+        StartCoroutine(RotateTile(newTileState.Right.transform, previousTileState.RightRotation,
+            newRotation));
+        rotateY(newTileState.Left.gameObject.transform, newTileState.LeftRotation);
     }
 
     private void TransitionRightMovement(TileState previousTileState, TileState newTileState)
@@ -220,9 +229,20 @@ public class Map : MonoBehaviour
                 newTileState.Right.transform,
                 APPEARING_RIGHT_TILE_POSITION,
                 RIGHT_TILE_POSITION));
+
+        var newRotation = newTileState.LeftRotation;
+        if (newRotation > previousTileState.LeftRotation)
+        {
+            newRotation -= 360;
+        }
+
+        StartCoroutine(RotateTile(newTileState.Left.transform, previousTileState.LeftRotation,
+            newRotation));
+        rotateY(newTileState.Right.gameObject.transform, newTileState.RightRotation);
     }
 
-    IEnumerator TransitionTileThatDisappears(Transform transform, Vector3 original, Vector3 newPosition, Vector3 disappearingPosition)
+    IEnumerator TransitionTileThatDisappears(Transform transform, Vector3 original, Vector3 newPosition,
+        Vector3 disappearingPosition)
     {
         yield return TransitionTile(transform, original, newPosition);
         transform.position = disappearingPosition;
@@ -239,6 +259,23 @@ public class Map : MonoBehaviour
             transform.position = Vector3.Lerp(original, newPosition, 1 - (timeLeft / totalTime));
             yield return new WaitForEndOfFrame();
         }
+
+        Rotating = false;
+    }
+
+    IEnumerator RotateTile(Transform transform, float original, float newRotation)
+    {
+        var totalTime = 0.5f;
+        var timeLeft = totalTime;
+
+        while (timeLeft > 0)
+        {
+            timeLeft -= Time.deltaTime;
+            transform.Rotate(0,
+                transform.rotation.eulerAngles.y - Mathf.Lerp(original, newRotation, 1 - (timeLeft / totalTime)), 0);
+            yield return new WaitForEndOfFrame();
+        }
+
         Rotating = false;
     }
 
