@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Face : MonoBehaviour
+public class Tile : MonoBehaviour
 {
     public int faceNumber;
     // Start is called before the first frame update

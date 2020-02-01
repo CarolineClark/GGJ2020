@@ -6,11 +6,11 @@ using UnityEngine;
 public class Map : MonoBehaviour
 {
     // IMPORTANT  - face0 = faces[0]
-    public Face[] faces;
+    public Tile[] faces;
     public float rotationSpeed = 100f;
 
 
-    private Face _currentFace;
+    private Tile _currentTile;
     private CubeController _cubeController;
     private bool _rotating = false;
 
@@ -28,6 +28,11 @@ public class Map : MonoBehaviour
         {
             ControlRotateCube();
         }
+    }
+
+    private Tile[] MapCubeRotationToTilesVisible()
+    {
+        return new Tile[]{};
     }
 
     private void ControlRotateCube()
