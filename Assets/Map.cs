@@ -6,7 +6,7 @@ using UnityEngine;
 public class Map : MonoBehaviour
 {
     // IMPORTANT  - face0 = faces[0]
-    public Tile[] faces;
+    public Tile[] tiles;
     public float rotationSpeed = 100f;
 
 

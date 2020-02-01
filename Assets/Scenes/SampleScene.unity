@@ -132,7 +132,7 @@ GameObject:
   - component: {fileID: 291633715}
   - component: {fileID: 291633714}
   m_Layer: 0
-  m_Name: Face2
+  m_Name: Tile2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -317,7 +317,7 @@ GameObject:
   - component: {fileID: 706202582}
   - component: {fileID: 706202581}
   m_Layer: 0
-  m_Name: Face5
+  m_Name: Tile5
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -411,7 +411,7 @@ GameObject:
   - component: {fileID: 906458078}
   - component: {fileID: 906458077}
   m_Layer: 0
-  m_Name: Face3
+  m_Name: Tile3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -588,7 +588,7 @@ GameObject:
   - component: {fileID: 988958995}
   - component: {fileID: 988958994}
   m_Layer: 0
-  m_Name: Face4
+  m_Name: Tile4
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -787,7 +787,7 @@ GameObject:
   - component: {fileID: 1346255877}
   - component: {fileID: 1346255876}
   m_Layer: 0
-  m_Name: Face0
+  m_Name: Tile0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -978,7 +978,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 823a8045b386d41cbb7d854324c14a31, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  faces:
+  tiles:
   - {fileID: 1346255876}
   - {fileID: 1840679191}
   - {fileID: 291633714}
@@ -1019,7 +1019,7 @@ GameObject:
   - component: {fileID: 1840679192}
   - component: {fileID: 1840679191}
   m_Layer: 0
-  m_Name: Face1
+  m_Name: Tile1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
