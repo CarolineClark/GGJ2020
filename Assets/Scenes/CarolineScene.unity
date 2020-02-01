@@ -1055,7 +1055,7 @@ PrefabInstance:
     - target: {fileID: -927199367670048503, guid: 106d36837a5d449e9acc3a039fb71591,
         type: 3}
       propertyPath: m_Name
-      value: reoriented_fence
+      value: fence
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: 106d36837a5d449e9acc3a039fb71591,
         type: 3}

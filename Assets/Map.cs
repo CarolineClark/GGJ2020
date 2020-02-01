@@ -75,6 +75,8 @@ public class Map : MonoBehaviour
     {
         if (!Rotating)
         {
+            // check if can rotate cube. If fence in the way, tile map cannot be rotated.
+
             ControlRotateCube();
         }
     }
