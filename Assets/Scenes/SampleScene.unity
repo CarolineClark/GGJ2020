@@ -682,7 +682,6 @@ GameObject:
   - component: {fileID: 1132570544}
   - component: {fileID: 1132570543}
   - component: {fileID: 1132570542}
-  - component: {fileID: 1132570546}
   m_Layer: 0
   m_Name: Cube
   m_TagString: Untagged
@@ -756,26 +755,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1132570541}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.26, y: 3.61, z: 0}
+  m_LocalRotation: {x: -0, y: -0.38268343, z: -0, w: 0.92387956}
+  m_LocalPosition: {x: 0.11631953, y: 3.6413903, z: 0.11631952}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_Father: {fileID: 1795582523}
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1132570546
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1132570541}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f0787f5ca39745a0ace3d8bd2058ee6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  rotationSpeed: 100
 --- !u!1 &1346255874
 GameObject:
   m_ObjectHideFlags: 0
@@ -948,7 +934,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1795582521
 GameObject:
@@ -979,6 +965,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 823a8045b386d41cbb7d854324c14a31, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  faces:
+  - {fileID: 1346255876}
+  - {fileID: 1840679191}
+  - {fileID: 291633714}
+  - {fileID: 906458077}
+  - {fileID: 988958994}
+  - {fileID: 706202581}
+  rotationSpeed: 100
 --- !u!4 &1795582523
 Transform:
   m_ObjectHideFlags: 0
@@ -996,8 +990,9 @@ Transform:
   - {fileID: 906458076}
   - {fileID: 988958993}
   - {fileID: 706202580}
+  - {fileID: 1132570545}
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 45, z: 0}
 --- !u!1 &1840679189
 GameObject:
