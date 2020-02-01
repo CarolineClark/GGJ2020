@@ -7,6 +7,7 @@ public class MainMenu : MonoBehaviour
 {
     public GameObject blokeyFrame;
     public GameObject gravestoneFrame;
+    public GameObject treeFrame;
     public GameObject backgroundFrame;
 
     private void Update()
@@ -33,12 +34,16 @@ public class MainMenu : MonoBehaviour
     private void UpdateParallax()
     {
         var mouseX = (Input.mousePosition.x * 2) / Screen.width;
-        Debug.Log(mouseX);
+
         var pos = blokeyFrame.transform.position;
         blokeyFrame.transform.position = new Vector3(mouseX * 10, pos.y, pos.z);
 
         pos = gravestoneFrame.transform.position;
         gravestoneFrame.transform.position = new Vector3( mouseX * 20, pos.y, pos.z);
+
+
+        pos = treeFrame.transform.position;
+        treeFrame.transform.position = new Vector3( mouseX * 30, pos.y, pos.z);
 
         pos = backgroundFrame.transform.position;
         backgroundFrame.transform.position = new Vector3(mouseX * 40, pos.y, pos.z);
