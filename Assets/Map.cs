@@ -90,45 +90,62 @@ public class Map : MonoBehaviour
     {
         if (previousTileState.Left == newTileState.Left)
         {
-            var previousPlayerPosition = previousTileState.Player.transform.position;
-            var playerPosition = newTileState.Player.transform.position;
-            StartCoroutine(
-                TransitionTile(
-                    previousTileState.Player.transform,
-                    previousPlayerPosition,
-                    DISAPPEARING_LEFT_TILE_POSITION));
-            StartCoroutine(
-                TransitionTile(
-                    newTileState.Player.transform,
-                    playerPosition,
-                    PLAYER_TILE_POSITION));
-            StartCoroutine(
-                TransitionTile(
-                    newTileState.Right.transform,
-                    APPEARING_RIGHT_TILE_POSITION,
-                    RIGHT_TILE_POSITION));
+            TransitionRightMovement(previousTileState, newTileState);
         }
         else if (previousTileState.Right == newTileState.Right)
         {
-            var previousPlayerPosition = previousTileState.Player.transform.position;
-            var playerPosition = newTileState.Player.transform.position;
-            StartCoroutine(
-                TransitionTile(
-                    previousTileState.Player.transform,
-                    previousPlayerPosition,
-                    DISAPPEARING_RIGHT_TILE_POSITION));
-            StartCoroutine(
-                TransitionTile(
-                    newTileState.Player.transform,
-                    playerPosition,
-                    PLAYER_TILE_POSITION));
-            StartCoroutine(
-                TransitionTile(
-                    newTileState.Left.transform,
-                    APPEARING_LEFT_TILE_POSITION,
-                    LEFT_TILE_POSITION));
-
+            TransitionLeftMovement(previousTileState, newTileState);
         }
+    }
+
+    private void TransitionLeftMovement(TileState previousTileState, TileState newTileState)
+    {
+        var previousPlayerPosition = previousTileState.Player.transform.position;
+        var playerPosition = newTileState.Player.transform.position;
+        StartCoroutine(
+            TransitionTileThatDisappears(
+                previousTileState.Player.transform,
+                previousPlayerPosition,
+                DISAPPEARING_RIGHT_TILE_POSITION,
+                OUT_OF_SIGHT));
+        StartCoroutine(
+            TransitionTile(
+                newTileState.Player.transform,
+                playerPosition,
+                PLAYER_TILE_POSITION));
+        StartCoroutine(
+            TransitionTile(
+                newTileState.Left.transform,
+                APPEARING_LEFT_TILE_POSITION,
+                LEFT_TILE_POSITION));
+    }
+
+    private void TransitionRightMovement(TileState previousTileState, TileState newTileState)
+    {
+        var previousPlayerPosition = previousTileState.Player.transform.position;
+        var playerPosition = newTileState.Player.transform.position;
+        StartCoroutine(
+            TransitionTileThatDisappears(
+                previousTileState.Player.transform,
+                previousPlayerPosition,
+                DISAPPEARING_LEFT_TILE_POSITION,
+                OUT_OF_SIGHT));
+        StartCoroutine(
+            TransitionTile(
+                newTileState.Player.transform,
+                playerPosition,
+                PLAYER_TILE_POSITION));
+        StartCoroutine(
+            TransitionTile(
+                newTileState.Right.transform,
+                APPEARING_RIGHT_TILE_POSITION,
+                RIGHT_TILE_POSITION));
+    }
+
+    IEnumerator TransitionTileThatDisappears(Transform transform, Vector3 original, Vector3 newPosition, Vector3 disappearingPosition)
+    {
+        yield return TransitionTile(transform, original, newPosition);
+        transform.position = disappearingPosition;
     }
 
     IEnumerator TransitionTile(Transform transform, Vector3 original, Vector3 newPosition)
