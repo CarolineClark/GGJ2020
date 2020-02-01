@@ -13,15 +13,7 @@ public class Map : MonoBehaviour
     private Tile _currentTile;
     private CubeController _cubeController;
 
-    private bool Rotating
-    {
-        get => _rotating;
-        set
-        {
-            Debug.Log("setting to " + value);
-            _rotating = value;
-        }
-    }
+    private bool Rotating { get; set; } = false;
 
     public Vector3 _transformForward;
     public Vector3 _transformUp;
@@ -40,7 +32,6 @@ public class Map : MonoBehaviour
     private Vector3 APPEARING_LEFT_TILE_POSITION = new Vector3(0, 0, 10f);
 
     private Vector3 OUT_OF_SIGHT = new Vector3(0, 0, -100F);
-    private bool _rotating = false;
 
     public class TileState
     {
@@ -208,8 +199,6 @@ public class Map : MonoBehaviour
             throw new Exception("WTF!?!?!?!?! yOuR tILE iS nUlL?!?!?!?!");
         }
 
-        Debug.Log("player = " + playerTile + ", rightTile = " + rightTile + ", leftTile = " + leftTile);
-
         return new TileState(playerTile, rightTile, leftTile);
     }
 
@@ -240,12 +229,9 @@ public class Map : MonoBehaviour
 
             _cubeController.transform.Rotate(angleThisFrame * rotation.x, angleThisFrame * rotation.y,
                 angleThisFrame * rotation.z, Space.World);
-            // transform.Rotate(transform.forward, angleThisFrame);
-            // transform.rotation = Quaternion.Euler(angleThisFrame * rotation);
 
             yield return new WaitForEndOfFrame();
         }
-        // transform.rotation = Quaternion.Euler(90 * rotation);
 
         TransitionAllTiles();
     }
