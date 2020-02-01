@@ -16,11 +16,26 @@ public class Map : MonoBehaviour
 
     private Tile _currentTile;
     private CubeController _cubeController;
-    private bool _rotating = false;
+
+    private bool Rotating { get; set; } = false;
 
     public Vector3 _transformForward;
     public Vector3 _transformUp;
     public Vector3 _transformRight;
+    public Quaternion TransformRotation;
+    public Vector3 _transformRotationEulerAngles;
+
+    private TileState _previousTileState;
+    private Vector3 PLAYER_TILE_POSITION = new Vector3(0, 0, 0);
+    private Vector3 LEFT_TILE_POSITION = new Vector3(1.5f, 0, 0);
+    private Vector3 RIGHT_TILE_POSITION = new Vector3(0, 0, 1.5f);
+
+    private Vector3 DISAPPEARING_RIGHT_TILE_POSITION = new Vector3(-10, 0, 0);
+    private Vector3 DISAPPEARING_LEFT_TILE_POSITION = new Vector3(0, 0, -10f);
+    private Vector3 APPEARING_RIGHT_TILE_POSITION = new Vector3(0, 0, 10f);
+    private Vector3 APPEARING_LEFT_TILE_POSITION = new Vector3(10, 0, 0);
+
+    private Vector3 OUT_OF_SIGHT = new Vector3(0, 0, -100F);
 
     public class TileState
     {
@@ -45,43 +60,124 @@ public class Map : MonoBehaviour
     void Start()
     {
         _cubeController = GetComponentInChildren<CubeController>();
-        MapCubeRotationToTilesVisible();
+        foreach (var tile in tiles)
+        {
+            tile.gameObject.transform.position = OUT_OF_SIGHT;
+        }
+        var tileState = MapCubeRotationToTilesVisible();
+        var playerGameObject = tileState.Player.gameObject;
+        playerGameObject.SetActive(true);
+        var leftGameObject = tileState.Left.gameObject;
+        leftGameObject.SetActive(true);
+        var rightGameObject = tileState.Right.gameObject;
+        rightGameObject.SetActive(true);
+
+        playerGameObject.transform.position = PLAYER_TILE_POSITION;
+        leftGameObject.transform.position = LEFT_TILE_POSITION;
+        rightGameObject.transform.position = RIGHT_TILE_POSITION;
+
+        _previousTileState = tileState;
     }
 
 
     // Update is called once per frame
     void Update()
     {
-        if (!_rotating)
+        if (!Rotating)
         {
             ControlRotateCube();
         }
-
-        ExampleOfHowMapCubeEtcWorks();
     }
 
-    private void ExampleOfHowMapCubeEtcWorks()
+    private void TransitionAllTiles()
     {
         var tileState = MapCubeRotationToTilesVisible();
-        foreach (var tile in tiles)
+        TransitionToNewTileState(_previousTileState, tileState);
+        _previousTileState = tileState;
+    }
+
+    private void TransitionToNewTileState(TileState previousTileState, TileState newTileState)
+    {
+        if (previousTileState.Left == newTileState.Left)
         {
-            tile.gameObject.SetActive(false);
+            TransitionRightMovement(previousTileState, newTileState);
         }
-
-        tileState.Player.gameObject.SetActive(true);
-        tileState.Right.gameObject.SetActive(true);
-        tileState.Left.gameObject.SetActive(true);
-        tileState.Player.gameObject.transform.position = new Vector3(0, 0, 0);
-        tileState.Right.gameObject.transform.position = new Vector3(0, 0, 1.5f);
-        tileState.Left.gameObject.transform.position = new Vector3(1.5f, 0, 0);
-
-        rotateY(tileState.Right.gameObject, tileState.RightRotation);
-        rotateY(tileState.Left.gameObject, tileState.LeftRotation);
+        else if (previousTileState.Right == newTileState.Right)
+        {
+            TransitionLeftMovement(previousTileState, newTileState);
+        }
+        
+        rotateY(newTileState.Right.gameObject, newTileState.RightRotation);
+        rotateY(newTileState.Left.gameObject, newTileState.LeftRotation);
     }
 
     public void rotateY(GameObject gameObject, float angle)
     {
         gameObject.transform.Rotate(0, gameObject.transform.rotation.eulerAngles.y - angle, 0);
+    }
+
+    private void TransitionLeftMovement(TileState previousTileState, TileState newTileState)
+    {
+        var previousPlayerPosition = previousTileState.Player.transform.position;
+        var playerPosition = newTileState.Player.transform.position;
+        StartCoroutine(
+            TransitionTileThatDisappears(
+                previousTileState.Player.transform,
+                previousPlayerPosition,
+                DISAPPEARING_RIGHT_TILE_POSITION,
+                OUT_OF_SIGHT));
+        StartCoroutine(
+            TransitionTile(
+                newTileState.Player.transform,
+                playerPosition,
+                PLAYER_TILE_POSITION));
+        StartCoroutine(
+            TransitionTile(
+                newTileState.Left.transform,
+                APPEARING_LEFT_TILE_POSITION,
+                LEFT_TILE_POSITION));
+    }
+
+    private void TransitionRightMovement(TileState previousTileState, TileState newTileState)
+    {
+        var previousPlayerPosition = previousTileState.Player.transform.position;
+        var playerPosition = newTileState.Player.transform.position;
+        StartCoroutine(
+            TransitionTileThatDisappears(
+                previousTileState.Player.transform,
+                previousPlayerPosition,
+                DISAPPEARING_LEFT_TILE_POSITION,
+                OUT_OF_SIGHT));
+        StartCoroutine(
+            TransitionTile(
+                newTileState.Player.transform,
+                playerPosition,
+                PLAYER_TILE_POSITION));
+        StartCoroutine(
+            TransitionTile(
+                newTileState.Right.transform,
+                APPEARING_RIGHT_TILE_POSITION,
+                RIGHT_TILE_POSITION));
+    }
+
+    IEnumerator TransitionTileThatDisappears(Transform transform, Vector3 original, Vector3 newPosition, Vector3 disappearingPosition)
+    {
+        yield return TransitionTile(transform, original, newPosition);
+        transform.position = disappearingPosition;
+    }
+
+    IEnumerator TransitionTile(Transform transform, Vector3 original, Vector3 newPosition)
+    {
+        var totalTime = 0.5f;
+        var timeLeft = totalTime;
+
+        while (timeLeft > 0)
+        {
+            timeLeft -= Time.deltaTime;
+            transform.position = Vector3.Lerp(original, newPosition, 1 - (timeLeft / totalTime));
+            yield return new WaitForEndOfFrame();
+        }
+        Rotating = false;
     }
 
     // If you want the right tiles, talk to ME
@@ -147,17 +243,15 @@ public class Map : MonoBehaviour
             }
         }
 
-        // 0, 1, 0 - player is on this one
-        // 0, 0, 1 - left
-        // 1, 0, 0 - right
-
         Debug.DrawRay(_cubeController.transform.position, _transformUp * 5, Color.blue);
         Debug.DrawRay(_cubeController.transform.position, _transformForward * 5, Color.red);
         Debug.DrawRay(_cubeController.transform.position, _transformRight * 5, Color.green);
+        TransformRotation = _cubeController.transform.rotation;
+        _transformRotationEulerAngles = TransformRotation.eulerAngles;
 
         if (playerTile == null || rightTile == null || leftTile == null)
         {
-            throw new Exception("WTF!?!?!?!?! yOu'rE tILE iS nUlL?!?!?!?!");
+            throw new Exception("WTF!?!?!?!?! yOuR tILE iS nUlL?!?!?!?!");
         }
 
         return new TileState(playerTile, rightTile, leftTile, rightRotation,
@@ -170,16 +264,15 @@ public class Map : MonoBehaviour
         {
             StartCoroutine(RotateCube(new Vector3(-1, 0, 0)));
         }
-
-        if (Input.GetKeyDown(KeyCode.LeftArrow))
+        else if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
             StartCoroutine(RotateCube(new Vector3(0, 0, 1)));
         }
     }
 
-    IEnumerator RotateCube(Vector3 rotation)
+    private IEnumerator RotateCube(Vector3 rotation)
     {
-        _rotating = true;
+        Rotating = true;
         var angleLeft = 90f;
         while (angleLeft > 0)
         {
@@ -192,13 +285,10 @@ public class Map : MonoBehaviour
 
             _cubeController.transform.Rotate(angleThisFrame * rotation.x, angleThisFrame * rotation.y,
                 angleThisFrame * rotation.z, Space.World);
-            // transform.Rotate(transform.forward, angleThisFrame);
-            // transform.rotation = Quaternion.Euler(angleThisFrame * rotation);
 
             yield return new WaitForEndOfFrame();
         }
-        // transform.rotation = Quaternion.Euler(90 * rotation);
 
-        _rotating = false;
+        TransitionAllTiles();
     }
 }
