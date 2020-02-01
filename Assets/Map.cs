@@ -22,6 +22,9 @@ public class Map : MonoBehaviour
     public Vector3 _transformRotationEulerAngles;
 
     private TileState _previousTileState;
+    private Vector3 PLAYER_TILE_POSITION = new Vector3(0, 0, 0);
+    private Vector3 LEFT_TILE_POSITION = new Vector3(0, 0, 1.5f);
+    private Vector3 RIGHT_TILE_POSITION = new Vector3(1.5f, 0, 0);
 
     public class TileState
     {
@@ -50,45 +53,83 @@ public class Map : MonoBehaviour
         if (!_rotating)
         {
             ControlRotateCube();
-            ExampleOfHowMapCubeEtcWorks();
         }
     }
 
     private void ExampleOfHowMapCubeEtcWorks()
     {
         var tileState = MapCubeRotationToTilesVisible();
-        foreach (var tile in tiles)
-        {
-            tile.gameObject.SetActive(false);
-        }
+        // foreach (var tile in tiles)
+        // {
+        //     tile.gameObject.SetActive(false);
+        // }
 
         var playerGameObject = tileState.Player.gameObject;
-        playerGameObject.SetActive(true);
+        // playerGameObject.SetActive(true);
         var leftGameObject = tileState.Left.gameObject;
-        leftGameObject.SetActive(true);
+        // leftGameObject.SetActive(true);
         var rightGameObject = tileState.Right.gameObject;
-        rightGameObject.SetActive(true);
+        // rightGameObject.SetActive(true);
 
-        playerGameObject.transform.position = new Vector3(0, 0, 0);
-        leftGameObject.transform.position = new Vector3(0, 0, 1.5f);
-        rightGameObject.transform.position = new Vector3(1.5f, 0, 0);
+        TransitionTileMovement(_previousTileState, tileState);
+
+        // playerGameObject.transform.position = PLAYER_TILE_POSITION;
+        // leftGameObject.transform.position = LEFT_TILE_POSITION;
+        // rightGameObject.transform.position = RIGHT_TILE_POSITION;
 
         _previousTileState = tileState;
     }
 
     private void TransitionTileMovement(TileState previousTileState, TileState newTileState)
     {
+        if (_previousTileState == null)
+        {
+            Debug.Log("returning null");
+            return;
+        }
         if (previousTileState.Left == newTileState.Left)
         {
+            Debug.Log("left = left");
             // then the player is moving right
             // lerp the old player tile going left and back
             // lerp the old right to player
             // lerp the new right out of range to the new right
             // rotate the old left
+            var previousPlayerPosition = previousTileState.Player.transform.position;
+            var playerPosition = newTileState.Player.transform.position;
+            StartCoroutine(
+                TransitionTile(
+                    previousTileState.Player.transform,
+                    previousPlayerPosition,
+                    previousPlayerPosition + Vector3.left));
+            StartCoroutine(
+                TransitionTile(
+                    newTileState.Player.transform,
+                    playerPosition,
+                    PLAYER_TILE_POSITION));
+            StartCoroutine(
+                TransitionTile(
+                    newTileState.Right.transform,
+                    Vector3.right * 10,
+                    RIGHT_TILE_POSITION));
         }
         else if (previousTileState.Right == newTileState.Right)
         {
-            
+
+        }
+    }
+
+    IEnumerator TransitionTile(Transform transform, Vector3 original, Vector3 newPosition)
+    {
+        var totalTime = 2f;
+        var timeLeft = totalTime;
+
+        while (timeLeft > 0)
+        {
+            Debug.Log("yield return");
+            timeLeft -= Time.deltaTime;
+            Vector3.Lerp(original, newPosition, timeLeft / totalTime);
+            yield return new WaitForEndOfFrame();
         }
     }
 
@@ -168,6 +209,7 @@ public class Map : MonoBehaviour
 
     private IEnumerator RotateCube(Vector3 rotation)
     {
+        ExampleOfHowMapCubeEtcWorks();
         _rotating = true;
         var angleLeft = 90f;
         while (angleLeft > 0)
