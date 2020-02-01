@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 public class Map : MonoBehaviour
@@ -13,7 +12,16 @@ public class Map : MonoBehaviour
 
     private Tile _currentTile;
     private CubeController _cubeController;
-    private bool _rotating = false;
+
+    private bool Rotating
+    {
+        get => _rotating;
+        set
+        {
+            Debug.Log("setting to " + value);
+            _rotating = value;
+        }
+    }
 
     public Vector3 _transformForward;
     public Vector3 _transformUp;
@@ -25,6 +33,14 @@ public class Map : MonoBehaviour
     private Vector3 PLAYER_TILE_POSITION = new Vector3(0, 0, 0);
     private Vector3 LEFT_TILE_POSITION = new Vector3(0, 0, 1.5f);
     private Vector3 RIGHT_TILE_POSITION = new Vector3(1.5f, 0, 0);
+
+    private Vector3 DISAPPEARING_RIGHT_TILE_POSITION = new Vector3(0, 0, -10f);
+    private Vector3 DISAPPEARING_LEFT_TILE_POSITION = new Vector3(-10, 0, 0f);
+    private Vector3 APPEARING_RIGHT_TILE_POSITION = new Vector3(10, 0, 0);
+    private Vector3 APPEARING_LEFT_TILE_POSITION = new Vector3(0, 0, 10f);
+
+    private Vector3 OUT_OF_SIGHT = new Vector3(0, 0, -100F);
+    private bool _rotating = false;
 
     public class TileState
     {
@@ -43,65 +59,53 @@ public class Map : MonoBehaviour
     void Start()
     {
         _cubeController = GetComponentInChildren<CubeController>();
-        MapCubeRotationToTilesVisible();
+        foreach (var tile in tiles)
+        {
+            tile.gameObject.transform.position = OUT_OF_SIGHT;
+        }
+        var tileState = MapCubeRotationToTilesVisible();
+        var playerGameObject = tileState.Player.gameObject;
+        playerGameObject.SetActive(true);
+        var leftGameObject = tileState.Left.gameObject;
+        leftGameObject.SetActive(true);
+        var rightGameObject = tileState.Right.gameObject;
+        rightGameObject.SetActive(true);
+
+        playerGameObject.transform.position = PLAYER_TILE_POSITION;
+        leftGameObject.transform.position = LEFT_TILE_POSITION;
+        rightGameObject.transform.position = RIGHT_TILE_POSITION;
+
+        _previousTileState = tileState;
     }
 
 
     // Update is called once per frame
     void Update()
     {
-        if (!_rotating)
+        if (!Rotating)
         {
             ControlRotateCube();
         }
     }
 
-    private void ExampleOfHowMapCubeEtcWorks()
+    private void TransitionAllTiles()
     {
         var tileState = MapCubeRotationToTilesVisible();
-        // foreach (var tile in tiles)
-        // {
-        //     tile.gameObject.SetActive(false);
-        // }
-
-        var playerGameObject = tileState.Player.gameObject;
-        // playerGameObject.SetActive(true);
-        var leftGameObject = tileState.Left.gameObject;
-        // leftGameObject.SetActive(true);
-        var rightGameObject = tileState.Right.gameObject;
-        // rightGameObject.SetActive(true);
-
-        TransitionTileMovement(_previousTileState, tileState);
-
-        // playerGameObject.transform.position = PLAYER_TILE_POSITION;
-        // leftGameObject.transform.position = LEFT_TILE_POSITION;
-        // rightGameObject.transform.position = RIGHT_TILE_POSITION;
-
+        TransitionToNewTileState(_previousTileState, tileState);
         _previousTileState = tileState;
     }
 
-    private void TransitionTileMovement(TileState previousTileState, TileState newTileState)
+    private void TransitionToNewTileState(TileState previousTileState, TileState newTileState)
     {
-        if (_previousTileState == null)
-        {
-            Debug.Log("returning null");
-            return;
-        }
         if (previousTileState.Left == newTileState.Left)
         {
-            Debug.Log("left = left");
-            // then the player is moving right
-            // lerp the old player tile going left and back
-            // lerp the old right to player
-            // lerp the new right out of range to the new right
-            // rotate the old left
             var previousPlayerPosition = previousTileState.Player.transform.position;
             var playerPosition = newTileState.Player.transform.position;
             StartCoroutine(
                 TransitionTile(
                     previousTileState.Player.transform,
                     previousPlayerPosition,
-                    previousPlayerPosition + Vector3.left));
+                    DISAPPEARING_LEFT_TILE_POSITION));
             StartCoroutine(
                 TransitionTile(
                     newTileState.Player.transform,
@@ -110,27 +114,44 @@ public class Map : MonoBehaviour
             StartCoroutine(
                 TransitionTile(
                     newTileState.Right.transform,
-                    Vector3.right * 10,
+                    APPEARING_RIGHT_TILE_POSITION,
                     RIGHT_TILE_POSITION));
         }
         else if (previousTileState.Right == newTileState.Right)
         {
+            var previousPlayerPosition = previousTileState.Player.transform.position;
+            var playerPosition = newTileState.Player.transform.position;
+            StartCoroutine(
+                TransitionTile(
+                    previousTileState.Player.transform,
+                    previousPlayerPosition,
+                    DISAPPEARING_RIGHT_TILE_POSITION));
+            StartCoroutine(
+                TransitionTile(
+                    newTileState.Player.transform,
+                    playerPosition,
+                    PLAYER_TILE_POSITION));
+            StartCoroutine(
+                TransitionTile(
+                    newTileState.Left.transform,
+                    APPEARING_LEFT_TILE_POSITION,
+                    LEFT_TILE_POSITION));
 
         }
     }
 
     IEnumerator TransitionTile(Transform transform, Vector3 original, Vector3 newPosition)
     {
-        var totalTime = 2f;
+        var totalTime = 0.5f;
         var timeLeft = totalTime;
 
         while (timeLeft > 0)
         {
-            Debug.Log("yield return");
             timeLeft -= Time.deltaTime;
-            Vector3.Lerp(original, newPosition, timeLeft / totalTime);
+            transform.position = Vector3.Lerp(original, newPosition, 1 - (timeLeft / totalTime));
             yield return new WaitForEndOfFrame();
         }
+        Rotating = false;
     }
 
     // If you want the right tiles, talk to ME
@@ -176,10 +197,6 @@ public class Map : MonoBehaviour
             }
         }
 
-        // 0, 1, 0 - player is on this one
-        // 0, 0, 1 - left
-        // 1, 0, 0 - right
-
         Debug.DrawRay(_cubeController.transform.position, _transformUp * 5, Color.blue);
         Debug.DrawRay(_cubeController.transform.position, _transformForward * 5, Color.red);
         Debug.DrawRay(_cubeController.transform.position, _transformRight * 5, Color.green);
@@ -191,6 +208,8 @@ public class Map : MonoBehaviour
             throw new Exception("WTF!?!?!?!?! yOuR tILE iS nUlL?!?!?!?!");
         }
 
+        Debug.Log("player = " + playerTile + ", rightTile = " + rightTile + ", leftTile = " + leftTile);
+
         return new TileState(playerTile, rightTile, leftTile);
     }
 
@@ -200,8 +219,7 @@ public class Map : MonoBehaviour
         {
             StartCoroutine(RotateCube(new Vector3(-1, 0, 0)));
         }
-
-        if (Input.GetKeyDown(KeyCode.LeftArrow))
+        else if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
             StartCoroutine(RotateCube(new Vector3(0, 0, 1)));
         }
@@ -209,8 +227,7 @@ public class Map : MonoBehaviour
 
     private IEnumerator RotateCube(Vector3 rotation)
     {
-        ExampleOfHowMapCubeEtcWorks();
-        _rotating = true;
+        Rotating = true;
         var angleLeft = 90f;
         while (angleLeft > 0)
         {
@@ -230,6 +247,6 @@ public class Map : MonoBehaviour
         }
         // transform.rotation = Quaternion.Euler(90 * rotation);
 
-        _rotating = false;
+        TransitionAllTiles();
     }
 }
