@@ -12,11 +12,11 @@ public class MainMenu : MonoBehaviour
 
     private void Update()
     {
-        this.UpdateParallax();
+        UpdateParallax();
 
         if (Input.GetKey(KeyCode.Return))
         {
-            this.PlayGame();
+            PlayGame();
         }
     }
 
