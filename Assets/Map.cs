@@ -8,7 +8,7 @@ public class Map : MonoBehaviour
     // IMPORTANT  - face0 = faces[0]
     public Tile[] tiles;
     public float rotationSpeed = 200f;
-
+    private float EPSILON = 0.1F;
 
     private Tile _currentTile;
     private CubeController _cubeController;
@@ -32,20 +32,7 @@ public class Map : MonoBehaviour
     private Vector3 APPEARING_LEFT_TILE_POSITION = new Vector3(0, 0, 10f);
 
     private Vector3 OUT_OF_SIGHT = new Vector3(0, 0, -100F);
-
-    public class TileState
-    {
-        public Tile Player { get; }
-        public Tile Right { get; }
-        public Tile Left { get; }
-
-        public TileState(Tile player, Tile right, Tile left)
-        {
-            this.Player = player;
-            this.Right = right;
-            this.Left = left;
-        }
-    }
+    private List<Vector3> _allCubeTransforms;
 
     void Start()
     {
@@ -54,6 +41,8 @@ public class Map : MonoBehaviour
         {
             tile.gameObject.transform.position = OUT_OF_SIGHT;
         }
+        InitialiseCubeTransformList();
+
         var tileState = MapCubeRotationToTilesVisible();
         var playerGameObject = tileState.Player.gameObject;
         playerGameObject.SetActive(true);
@@ -69,16 +58,65 @@ public class Map : MonoBehaviour
         _previousTileState = tileState;
     }
 
+    private void InitialiseCubeTransformList()
+    {
+        _allCubeTransforms = new List<Vector3>();
+        _transformForward = _cubeController.transform.forward;
+        var _transformBack = -_transformForward;
+        _transformUp = _cubeController.transform.up;
+        var _transformDown = -_transformUp;
+        _transformRight = _cubeController.transform.right;
+        var _transformLeft = -_transformRight;
+
+        _allCubeTransforms.Add(_transformRight);
+        _allCubeTransforms.Add(_transformUp);
+        _allCubeTransforms.Add(_transformLeft);
+        _allCubeTransforms.Add(_transformDown);
+        _allCubeTransforms.Add(_transformBack);
+        _allCubeTransforms.Add(_transformForward);
+    }
+
 
     // Update is called once per frame
     void Update()
     {
         if (!Rotating)
         {
+            PlayerInput playerInput = new PlayerInput(Input.GetKeyDown(KeyCode.LeftArrow), Input.GetKeyDown(KeyCode.RightArrow));
             // check if can rotate cube. If fence in the way, tile map cannot be rotated.
-
-            ControlRotateCube();
+            if (!FenceInTheWay(playerInput))
+            {
+                ControlRotateCube(playerInput);
+            }
         }
+    }
+
+    private bool FenceInTheWay(PlayerInput playerInput)
+    {
+        var playerInputLeft = playerInput.Left;
+        var fenceLeft = _previousTileState.Left.Fence;
+        var playerInputRight = playerInput.Right;
+        var fenceRight = _previousTileState.Right.Fence;
+        return CheckIfInputForcesPlayerIntoFence(playerInputLeft, fenceLeft) ||
+            CheckIfInputForcesPlayerIntoFence(playerInputRight, fenceRight);
+    }
+
+    private bool CheckIfInputForcesPlayerIntoFence(bool playerInputDir, Transform fence)
+    {
+        if (playerInputDir && fence != null)
+        {
+            // check the fence is close. Within an expected value?
+            var distance = Vector3.Distance(
+                fence.transform.position,
+                _previousTileState.Player.transform.position);
+            Debug.Log(distance);
+            if (distance < EPSILON)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void TransitionAllTiles()
@@ -167,20 +205,6 @@ public class Map : MonoBehaviour
     // If you want the right tiles, talk to ME
     public TileState MapCubeRotationToTilesVisible()
     {
-        var vector3s = new List<Vector3>();
-        _transformForward = _cubeController.transform.forward;
-        var _transformBack = -_transformForward;
-        _transformUp = _cubeController.transform.up;
-        var _transformDown = -_transformUp;
-        _transformRight = _cubeController.transform.right;
-        var _transformLeft = -_transformRight;
-
-        vector3s.Add(_transformRight);
-        vector3s.Add(_transformUp);
-        vector3s.Add(_transformLeft);
-        vector3s.Add(_transformDown);
-        vector3s.Add(_transformBack);
-        vector3s.Add(_transformForward);
 
         Tile playerTile = null;
         Tile leftTile = null;
@@ -191,17 +215,17 @@ public class Map : MonoBehaviour
         var playerRight = new Vector3(1, 0, 0);
         for (int i = 0; i < 6; i++)
         {
-            if (Vector3.Distance(playerSquare, vector3s[i]) < 0.01f)
+            if (Vector3.Distance(playerSquare, _allCubeTransforms[i]) < 0.01f)
             {
                 playerTile = tiles[i];
             }
 
-            if (Vector3.Distance(playerLeft, vector3s[i]) < 0.01f)
+            if (Vector3.Distance(playerLeft, _allCubeTransforms[i]) < 0.01f)
             {
                 leftTile = tiles[i];
             }
 
-            if (Vector3.Distance(playerRight, vector3s[i]) < 0.01f)
+            if (Vector3.Distance(playerRight, _allCubeTransforms[i]) < 0.01f)
             {
                 rightTile = tiles[i];
             }
@@ -221,13 +245,13 @@ public class Map : MonoBehaviour
         return new TileState(playerTile, rightTile, leftTile);
     }
 
-    private void ControlRotateCube()
+    private void ControlRotateCube(PlayerInput playerInput)
     {
-        if (Input.GetKeyDown(KeyCode.RightArrow))
+        if (playerInput.Right)
         {
             StartCoroutine(RotateCube(new Vector3(-1, 0, 0)));
         }
-        else if (Input.GetKeyDown(KeyCode.LeftArrow))
+        else if (playerInput.Left)
         {
             StartCoroutine(RotateCube(new Vector3(0, 0, 1)));
         }

@@ -9,6 +9,7 @@
         <e p="CubeController.cs" t="Include" />
         <e p="MainMenu.cs" t="Include" />
         <e p="Map.cs" t="Include" />
+        <e p="PlayerInput.cs" t="Include" />
         <e p="TextMesh Pro" t="Include">
           <e p="Fonts" t="Include">
             <e p="LiberationSans - OFL.txt" t="Include" />
@@ -38,6 +39,7 @@
           </e>
         </e>
         <e p="Tile.cs" t="Include" />
+        <e p="TileState.cs" t="Include" />
       </e>
       <e p="GGJ-20-Grave.sln" t="IncludeFlat" />
       <e p="obj" t="ExcludeRecursive" />
