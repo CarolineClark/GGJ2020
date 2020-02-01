@@ -20,7 +20,7 @@ public class CubeController : MonoBehaviour
         }
         if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
-            StartCoroutine(RotateCube(new Vector3(0, 0, 1)));
+            StartCoroutine(RotateCube(new Vector3(0, 0, -1)));
         }
     }
 
@@ -31,18 +31,17 @@ public class CubeController : MonoBehaviour
         {
             var angleThisFrame = Time.deltaTime * rotationSpeed;
             angleLeft -= angleThisFrame;
-            if (angleLeft < 0)
-            {
+            if (angleLeft < 0) {
                 angleThisFrame += angleLeft;
             }
 
-            // transform.Rotate(angleThisFrame * rotation.x, angleThisFrame * rotation.y, angleThisFrame * rotation.z);
+            transform.Rotate(angleThisFrame * rotation.x, angleThisFrame * rotation.y, angleThisFrame * rotation.z, Space.World);
             // transform.Rotate(transform.forward, angleThisFrame);
             // transform.rotation = Quaternion.Euler(angleThisFrame * rotation);
 
             yield return new WaitForEndOfFrame();
         }
-        transform.rotation = Quaternion.Euler(90 * rotation);
+        // transform.rotation = Quaternion.Euler(90 * rotation);
 
         Debug.Log(transform.rotation.y);
     }
