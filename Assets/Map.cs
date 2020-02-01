@@ -36,6 +36,7 @@ public class Map : MonoBehaviour
     private Vector3 APPEARING_LEFT_TILE_POSITION = new Vector3(10, 0, 0);
 
     private Vector3 OUT_OF_SIGHT = new Vector3(0, 0, -100F);
+    private float EPSILON = 1f;
 
     public class TileState
     {
@@ -79,13 +80,45 @@ public class Map : MonoBehaviour
         _previousTileState = tileState;
     }
 
+    private bool FenceInTheWay(PlayerInput playerInput)
+    {
+        var playerInputLeft = playerInput.Left;
+        var fenceLeft = _previousTileState.Left.Fence;
+        var playerInputRight = playerInput.Right;
+        var fenceRight = _previousTileState.Right.Fence;
+        return CheckIfInputForcesPlayerIntoFence(playerInputLeft, fenceLeft) ||
+               CheckIfInputForcesPlayerIntoFence(playerInputRight, fenceRight);
+    }
+
+    private bool CheckIfInputForcesPlayerIntoFence(bool playerInputDir, Transform fence)
+    {
+        if (playerInputDir && fence != null)
+        {
+            // check the fence is close. Within an expected value?
+            var distance = Vector3.Distance(
+                fence.transform.position,
+                _previousTileState.Player.transform.position);
+            Debug.Log(distance);
+            if (distance < EPSILON)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
 
     // Update is called once per frame
     void Update()
     {
         if (!Rotating)
         {
-            ControlRotateCube();
+            PlayerInput playerInput = new PlayerInput(Input.GetKeyDown(KeyCode.LeftArrow), Input.GetKeyDown(KeyCode.RightArrow));
+            if (!FenceInTheWay(playerInput))
+            {
+                ControlRotateCube(playerInput);
+            }
         }
     }
 
@@ -106,7 +139,7 @@ public class Map : MonoBehaviour
         {
             TransitionLeftMovement(previousTileState, newTileState);
         }
-        
+
         rotateY(newTileState.Right.gameObject, newTileState.RightRotation);
         rotateY(newTileState.Left.gameObject, newTileState.LeftRotation);
     }
@@ -258,13 +291,13 @@ public class Map : MonoBehaviour
             leftRotation);
     }
 
-    private void ControlRotateCube()
+    private void ControlRotateCube(PlayerInput playerInput)
     {
-        if (Input.GetKeyDown(KeyCode.RightArrow))
+        if (playerInput.Right)
         {
             StartCoroutine(RotateCube(new Vector3(-1, 0, 0)));
         }
-        else if (Input.GetKeyDown(KeyCode.LeftArrow))
+        else if (playerInput.Left)
         {
             StartCoroutine(RotateCube(new Vector3(0, 0, 1)));
         }
