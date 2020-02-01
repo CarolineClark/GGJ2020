@@ -5,6 +5,7 @@ using UnityEngine;
 public class CubeController : MonoBehaviour
 {
     public float rotationSpeed = 100f;
+    private bool _rotating = false;
 
     // Start is called before the first frame update
     void Start()
@@ -14,10 +15,19 @@ public class CubeController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (!_rotating)
+        {
+            ControlRotateCube();
+        }
+    }
+
+    private void ControlRotateCube()
+    {
         if (Input.GetKeyDown(KeyCode.RightArrow))
         {
             StartCoroutine(RotateCube(new Vector3(1, 0, 0)));
         }
+
         if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
             StartCoroutine(RotateCube(new Vector3(0, 0, -1)));
@@ -26,6 +36,7 @@ public class CubeController : MonoBehaviour
 
     IEnumerator RotateCube(Vector3 rotation)
     {
+        _rotating = true;
         var angleLeft = 90f;
         while (angleLeft > 0)
         {
@@ -42,7 +53,7 @@ public class CubeController : MonoBehaviour
             yield return new WaitForEndOfFrame();
         }
         // transform.rotation = Quaternion.Euler(90 * rotation);
-
-        Debug.Log(transform.rotation.y);
+        
+        _rotating = false;
     }
 }
