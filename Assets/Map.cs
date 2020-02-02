@@ -36,6 +36,7 @@ public class Map : MonoBehaviour
 
     private Vector3 OUT_OF_SIGHT = new Vector3(0, 0, -100F);
     private float FENCE_DISTANCE_ON_DIFFERENT_TILE_TO_STOP_PLAYER_EPSILON = 1.1f;
+    private Player _player;
 
     public class TileState
     {
@@ -84,13 +85,22 @@ public class Map : MonoBehaviour
     {
         if (!Rotating)
         {
+
             PlayerInput playerInput =
-                new PlayerInput(Input.GetKeyDown(KeyCode.LeftArrow), Input.GetKeyDown(KeyCode.RightArrow));
+                new PlayerInput(Input.GetKeyDown(KeyCode.LeftArrow), Input.GetKeyDown(KeyCode.RightArrow), Input.GetKeyDown(KeyCode.Space));
+
+            if (playerInput.Interact) {
+                var goals = FindObjectsOfType<Goal>();
+                foreach (var goal in goals) {
+                    goal.Interact();
+                }
+            }
+
             var fenceLocation = FenceInTheWay(playerInput);
             if (fenceLocation != FenceLocation.None)
             {
+                SoundManager.instance.PlayBounceFx();
                 BounceTiles(fenceLocation, _previousTileState, playerInput);
-
             }
             else
             {
@@ -174,10 +184,12 @@ public class Map : MonoBehaviour
     {
         if (playerInput.Right)
         {
+            SoundManager.instance.PlaySlideFx();
             StartCoroutine(RotateCube(new Vector3(-1, 0, 0)));
         }
         else if (playerInput.Left)
         {
+            SoundManager.instance.PlaySlideFx();
             StartCoroutine(RotateCube(new Vector3(0, 0, 1)));
         }
     }
