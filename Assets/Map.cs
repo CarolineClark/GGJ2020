@@ -11,10 +11,12 @@ public class Map : MonoBehaviour
     // IMPORTANT  - face0 = faces[0]
     public Tile[] tiles;
     public float rotationSpeed = 200f;
-
+    public int mapIndex = 0;
 
     private Tile _currentTile;
     private CubeController _cubeController;
+    private Vector3 _mapShift;
+    private bool _isActive;
 
     private bool Rotating { get; set; } = false;
 
@@ -54,11 +56,13 @@ public class Map : MonoBehaviour
             this.Left = left;
             this.RightRotation = rightRotation;
             this.LeftRotation = leftRotation;
+            // _mapShift = new Vector3(mapIndex);
         }
     }
 
     void Start()
     {
+        _isActive = mapIndex == 0;
         _cubeController = GetComponentInChildren<CubeController>();
         foreach (var tile in tiles)
         {
@@ -82,7 +86,7 @@ public class Map : MonoBehaviour
 
     void Update()
     {
-        if (!Rotating)
+        if (!Rotating && _isActive)
         {
 
             PlayerInput playerInput =
@@ -104,6 +108,11 @@ public class Map : MonoBehaviour
             else
             {
                 ControlRotateCube(playerInput);
+            }
+
+            if (Input.GetKeyDown(KeyCode.Space) && _previousTileState.Player.Portal)
+            {
+                StartCoroutine(Teleport(_previousTileState.Player.Portal));
             }
         }
     }
@@ -213,6 +222,17 @@ public class Map : MonoBehaviour
         }
 
         TransitionAllTiles();
+    }
+
+    private IEnumerator Teleport(Portal playerPortal)
+    {
+        Debug.Log("Teleporting!!");
+        Debug.Log(playerPortal.TargetTile.name);
+        var targetMap = playerPortal.TargetTile.GetComponentInParent<Map>();
+        _isActive = false;
+        
+        yield return new WaitForEndOfFrame();
+        targetMap._isActive = true;
     }
 
     private void TransitionAllTiles()
