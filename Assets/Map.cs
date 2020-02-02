@@ -310,39 +310,42 @@ public class Map : MonoBehaviour
 
     private void BounceTiles(FenceLocation fenceLocation, TileState tileState, PlayerInput playerInput)
     {
+        var animationTime = 0.3f;
+        var offsetMagnitude = 0.5f;
         if (fenceLocation == FenceLocation.PlayerTile)
         {
-            Vector3 offset = (playerInput.Left) ? new Vector3(-1, 0, 0) : new Vector3(0, 0, -1);
+            Vector3 offset = ((playerInput.Left) ? new Vector3(-1, 0, 0) : new Vector3(0, 0, -1)) * offsetMagnitude;
             var playerTileTransform = tileState.Player.transform;
             var otherTileTransform = (playerInput.Left) ? tileState.Left.transform : tileState.Right.transform;
+
             StartCoroutine(
                 TransitionTileBackAndForth(
                     playerTileTransform,
                     playerTileTransform.position,
                     playerTileTransform.position + offset,
-                    0.1f));
+                    animationTime));
             StartCoroutine(
                 TransitionTileBackAndForth(
                 otherTileTransform,
                 otherTileTransform.position,
                 otherTileTransform.position + offset,
-                0.1f));
+                animationTime));
         }
         else
         {
-            Vector3 offset = (fenceLocation == FenceLocation.LeftTile) ? new Vector3(-1, 0, 0) : new Vector3(0, 0, -1);
+            Vector3 offset = ((fenceLocation == FenceLocation.LeftTile) ? new Vector3(-1, 0, 0) : new Vector3(0, 0, -1)) * offsetMagnitude;
             var playerTileTransform = tileState.Player.transform;
             var otherTileTransform = (playerInput.Left) ? tileState.Left.transform : tileState.Right.transform;
             StartCoroutine(TransitionTileBackAndForth(
                 playerTileTransform,
                 playerTileTransform.position,
                 playerTileTransform.position + offset,
-                0.1f));
+                animationTime));
             StartCoroutine(TransitionTileBackAndForth(
                 otherTileTransform,
                 otherTileTransform.position,
                 otherTileTransform.position + offset,
-                0.1f));
+                animationTime));
         }
     }
 
