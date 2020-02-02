@@ -67,7 +67,7 @@ public class Map : MonoBehaviour
         INITIAL_CAMERA = Camera.main.transform.position;
 
         _isActive = mapIndex == 0;
-        _mapShift = new Vector3(0, 10f * mapIndex, 0);
+        _mapShift = new Vector3(0, 7f * mapIndex, 0);
         _playerObject = GameObject.FindWithTag("Player").GetComponent<Player>();
 
         PLAYER_TILE_POSITION += _mapShift;
