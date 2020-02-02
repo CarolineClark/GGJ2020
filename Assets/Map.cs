@@ -83,6 +83,25 @@ public class Map : MonoBehaviour
         _previousTileState = tileState;
     }
 
+    void Update()
+    {
+        if (!Rotating)
+        {
+            PlayerInput playerInput =
+                new PlayerInput(Input.GetKeyDown(KeyCode.LeftArrow), Input.GetKeyDown(KeyCode.RightArrow));
+            var fenceLocation = FenceInTheWay(playerInput);
+            if (fenceLocation != FenceLocation.None)
+            {
+                BounceTiles(fenceLocation, _previousTileState, playerInput);
+
+            }
+            else
+            {
+                ControlRotateCube(playerInput);
+            }
+        }
+    }
+
     private enum FenceLocation
     {
         None, LeftTile, RightTile, PlayerTile
@@ -152,29 +171,6 @@ public class Map : MonoBehaviour
         }
 
         return false;
-    }
-
-
-    // Update is called once per frame
-    void Update()
-    {
-        if (!Rotating)
-        {
-            PlayerInput playerInput =
-                new PlayerInput(Input.GetKeyDown(KeyCode.LeftArrow), Input.GetKeyDown(KeyCode.RightArrow));
-            var fenceLocation = FenceInTheWay(playerInput);
-            if (fenceLocation != FenceLocation.None)
-            {
-                Debug.Log(fenceLocation);
-                // bounce transition
-                BounceTiles(fenceLocation, _previousTileState, playerInput);
-
-            }
-            else
-            {
-                ControlRotateCube(playerInput);
-            }
-        }
     }
 
     private void ControlRotateCube(PlayerInput playerInput)
@@ -312,40 +308,44 @@ public class Map : MonoBehaviour
     {
         var animationTime = 0.3f;
         var offsetMagnitude = 0.5f;
-        if (fenceLocation == FenceLocation.PlayerTile)
+        if (playerInput.Left || playerInput.Right)
         {
-            Vector3 offset = ((playerInput.Left) ? new Vector3(-1, 0, 0) : new Vector3(0, 0, -1)) * offsetMagnitude;
-            var playerTileTransform = tileState.Player.transform;
-            var otherTileTransform = (playerInput.Left) ? tileState.Left.transform : tileState.Right.transform;
+            Rotating = true;
+            if (fenceLocation == FenceLocation.PlayerTile)
+            {
+                Vector3 offset = ((playerInput.Left) ? new Vector3(-1, 0, 0) : new Vector3(0, 0, -1)) * offsetMagnitude;
+                var playerTileTransform = tileState.Player.transform;
+                var otherTileTransform = (playerInput.Left) ? tileState.Left.transform : tileState.Right.transform;
 
-            StartCoroutine(
-                TransitionTileBackAndForth(
+                StartCoroutine(
+                    TransitionTileBackAndForth(
+                        playerTileTransform,
+                        playerTileTransform.position,
+                        playerTileTransform.position + offset,
+                        animationTime));
+                StartCoroutine(
+                    TransitionTileBackAndForth(
+                        otherTileTransform,
+                        otherTileTransform.position,
+                        otherTileTransform.position + offset,
+                        animationTime));
+            }
+            else
+            {
+                Vector3 offset = ((fenceLocation == FenceLocation.LeftTile) ? new Vector3(-1, 0, 0) : new Vector3(0, 0, -1)) * offsetMagnitude;
+                var playerTileTransform = tileState.Player.transform;
+                var otherTileTransform = (playerInput.Left) ? tileState.Left.transform : tileState.Right.transform;
+                StartCoroutine(TransitionTileBackAndForth(
                     playerTileTransform,
                     playerTileTransform.position,
                     playerTileTransform.position + offset,
                     animationTime));
-            StartCoroutine(
-                TransitionTileBackAndForth(
-                otherTileTransform,
-                otherTileTransform.position,
-                otherTileTransform.position + offset,
-                animationTime));
-        }
-        else
-        {
-            Vector3 offset = ((fenceLocation == FenceLocation.LeftTile) ? new Vector3(-1, 0, 0) : new Vector3(0, 0, -1)) * offsetMagnitude;
-            var playerTileTransform = tileState.Player.transform;
-            var otherTileTransform = (playerInput.Left) ? tileState.Left.transform : tileState.Right.transform;
-            StartCoroutine(TransitionTileBackAndForth(
-                playerTileTransform,
-                playerTileTransform.position,
-                playerTileTransform.position + offset,
-                animationTime));
-            StartCoroutine(TransitionTileBackAndForth(
-                otherTileTransform,
-                otherTileTransform.position,
-                otherTileTransform.position + offset,
-                animationTime));
+                StartCoroutine(TransitionTileBackAndForth(
+                    otherTileTransform,
+                    otherTileTransform.position,
+                    otherTileTransform.position + offset,
+                    animationTime));
+            }
         }
     }
 
@@ -431,7 +431,7 @@ public class Map : MonoBehaviour
         Rotating = false;
     }
 
-    private static IEnumerator TransitionTileBackAndForth(Transform transform, Vector3 original, Vector3 newPosition, float animationTime)
+    private IEnumerator TransitionTileBackAndForth(Transform transform, Vector3 original, Vector3 newPosition, float animationTime)
     {
         var timeLeft = animationTime;
 
@@ -448,6 +448,7 @@ public class Map : MonoBehaviour
             transform.position = Vector3.Lerp(newPosition, original, 1 - (timeLeft / animationTime));
             yield return new WaitForEndOfFrame();
         }
+        Rotating = false;
     }
 
     private static IEnumerator TransitionTile(Transform transform, Vector3 original, Vector3 newPosition)
