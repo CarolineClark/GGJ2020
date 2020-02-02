@@ -127,7 +127,7 @@ public class Map : MonoBehaviour
             else if (playerInput.Right)
             {
                 var expectedOffset = new Vector3(0, 0, 0.5f);
-                if (Vector2.Distance(difference, expectedOffset) < PLAYERTILE_FENCE_EPSILON)
+                if (Vector3.Distance(difference, expectedOffset) < PLAYERTILE_FENCE_EPSILON)
                 {
                     return true;
                 }
