@@ -487,6 +487,7 @@ MonoBehaviour:
   gravestoneFrame: {fileID: 1842255722}
   treeFrame: {fileID: 1037923120}
   backgroundFrame: {fileID: 559089645}
+  firstScene: Scenes/TutorialScene
 --- !u!1 &1149925506
 GameObject:
   m_ObjectHideFlags: 0
