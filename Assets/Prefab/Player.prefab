@@ -452,6 +452,8 @@ GameObject:
   - component: {fileID: 3295895665208784133}
   - component: {fileID: 3295895665208784134}
   - component: {fileID: 3295895665208784132}
+  - component: {fileID: -5561217729486406497}
+  - component: {fileID: 6955870176471673612}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -508,6 +510,35 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorControllerStateOnDisable: 0
+--- !u!65 &-5561217729486406497
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3295895665208784135}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.6752114, y: 1.5940204, z: 0.72570634}
+  m_Center: {x: 0, y: 1.0848827, z: 0}
+--- !u!54 &6955870176471673612
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3295895665208784135}
+  serializedVersion: 2
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_UseGravity: 1
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1 &3295895665279760534
 GameObject:
   m_ObjectHideFlags: 0
