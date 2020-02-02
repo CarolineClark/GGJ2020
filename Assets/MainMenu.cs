@@ -23,6 +23,7 @@ public class MainMenu : MonoBehaviour
 
     public void PlayGame()
     {
+        SoundManager.instance.PlayBounceFx();
         SceneManager.LoadScene(firstScene);
     }
 
