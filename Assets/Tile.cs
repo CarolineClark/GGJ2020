@@ -16,6 +16,15 @@ public class Tile : MonoBehaviour
     void Start()
     {
         Fence = transform.Find(FenceGameObjectName);
-        Portal = transform.Find(PortalGameObjectName).gameObject.GetComponentInChildren<Portal>();
+        var portalParent = transform.Find(PortalGameObjectName);
+        if (portalParent) {
+            Portal = portalParent.gameObject.GetComponentInChildren<Portal>();
+        }
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+
     }
 }

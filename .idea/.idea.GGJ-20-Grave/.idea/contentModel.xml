@@ -54,6 +54,7 @@
           </e>
         </e>
         <e p="Tile.cs" t="Include" />
+        <e p="TileGroupMirror.cs" t="Include" />
         <e p="TileState.cs" t="Include" />
       </e>
       <e p="GGJ-20-Grave.sln" t="IncludeFlat" />
