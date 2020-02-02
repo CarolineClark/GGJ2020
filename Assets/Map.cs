@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using UnityEngine;
-using UnityEngine.XR.WSA;
 using Debug = UnityEngine.Debug;
 
 public class Map : MonoBehaviour
@@ -311,41 +308,28 @@ public class Map : MonoBehaviour
         if (playerInput.Left || playerInput.Right)
         {
             Rotating = true;
-            if (fenceLocation == FenceLocation.PlayerTile)
-            {
-                Vector3 offset = ((playerInput.Left) ? new Vector3(-1, 0, 0) : new Vector3(0, 0, -1)) * offsetMagnitude;
-                var playerTileTransform = tileState.Player.transform;
-                var otherTileTransform = (playerInput.Left) ? tileState.Left.transform : tileState.Right.transform;
+            Vector3 offset = ((playerInput.Left) ? new Vector3(-1, 0, 0) : new Vector3(0, 0, -1)) * offsetMagnitude;
+            var playerTileTransform = tileState.Player.transform;
+            var tileTryingToReachTransform = (playerInput.Left) ? tileState.Left.transform : tileState.Right.transform;
+            var otherTileTransform = (playerInput.Left) ? tileState.Right.transform : tileState.Left.transform;
 
-                StartCoroutine(
+            var oldRotation = (playerInput.Left) ? tileState.RightRotation : tileState.LeftRotation;
+            float angle = (playerInput.Left) ? 30 : -30;
+            var newRotation = oldRotation + angle;
+
+            StartCoroutine(
                     TransitionTileBackAndForth(
                         playerTileTransform,
                         playerTileTransform.position,
                         playerTileTransform.position + offset,
                         animationTime));
-                StartCoroutine(
-                    TransitionTileBackAndForth(
-                        otherTileTransform,
-                        otherTileTransform.position,
-                        otherTileTransform.position + offset,
-                        animationTime));
-            }
-            else
-            {
-                Vector3 offset = ((fenceLocation == FenceLocation.LeftTile) ? new Vector3(-1, 0, 0) : new Vector3(0, 0, -1)) * offsetMagnitude;
-                var playerTileTransform = tileState.Player.transform;
-                var otherTileTransform = (playerInput.Left) ? tileState.Left.transform : tileState.Right.transform;
-                StartCoroutine(TransitionTileBackAndForth(
-                    playerTileTransform,
-                    playerTileTransform.position,
-                    playerTileTransform.position + offset,
+            StartCoroutine(
+                TransitionTileBackAndForth(
+                    tileTryingToReachTransform,
+                    tileTryingToReachTransform.position,
+                    tileTryingToReachTransform.position + offset,
                     animationTime));
-                StartCoroutine(TransitionTileBackAndForth(
-                    otherTileTransform,
-                    otherTileTransform.position,
-                    otherTileTransform.position + offset,
-                    animationTime));
-            }
+            StartCoroutine(WobbleTile(otherTileTransform, oldRotation, newRotation, animationTime));
         }
     }
 
@@ -474,6 +458,29 @@ public class Map : MonoBehaviour
             timeLeft -= Time.deltaTime;
             transform.Rotate(0,
                 transform.rotation.eulerAngles.y - Mathf.Lerp(original, newRotation, 1 - (timeLeft / totalTime)), 0);
+            yield return new WaitForEndOfFrame();
+        }
+
+        Rotating = false;
+    }
+
+    IEnumerator WobbleTile(Transform transform, float original, float newRotation, float totalTime)
+    {
+        // var totalTime = 0.5f;
+        var timeLeft = totalTime;
+
+        while (timeLeft > totalTime/2)
+        {
+            timeLeft -= Time.deltaTime;
+            transform.Rotate(0,
+                transform.rotation.eulerAngles.y - Mathf.Lerp(original, newRotation, 1 - (timeLeft / totalTime)), 0);
+            yield return new WaitForEndOfFrame();
+        }
+        while (timeLeft > 0)
+        {
+            timeLeft -= Time.deltaTime;
+            transform.Rotate(0,
+                transform.rotation.eulerAngles.y - Mathf.Lerp(newRotation, original, 1 - (timeLeft / totalTime)), 0);
             yield return new WaitForEndOfFrame();
         }
 
