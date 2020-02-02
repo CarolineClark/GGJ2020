@@ -67,7 +67,7 @@ public class Map : MonoBehaviour
         INITIAL_CAMERA = Camera.main.transform.position;
 
         _isActive = mapIndex == 0;
-        _mapShift = new Vector3(0, 20f * mapIndex, 0);
+        _mapShift = new Vector3(0, 10f * mapIndex, 0);
         _playerObject = GameObject.FindWithTag("Player").GetComponent<Player>();
 
         PLAYER_TILE_POSITION += _mapShift;
@@ -108,13 +108,15 @@ public class Map : MonoBehaviour
     {
         if (!Rotating && _isActive)
         {
-
             PlayerInput playerInput =
-                new PlayerInput(Input.GetKeyDown(KeyCode.LeftArrow), Input.GetKeyDown(KeyCode.RightArrow), Input.GetKeyDown(KeyCode.Space));
+                new PlayerInput(Input.GetKeyDown(KeyCode.LeftArrow), Input.GetKeyDown(KeyCode.RightArrow),
+                    Input.GetKeyDown(KeyCode.Space));
 
-            if (playerInput.Interact) {
+            if (playerInput.Interact)
+            {
                 var goals = FindObjectsOfType<Goal>();
-                foreach (var goal in goals) {
+                foreach (var goal in goals)
+                {
                     goal.Interact();
                 }
             }
@@ -260,7 +262,19 @@ public class Map : MonoBehaviour
         yield return new WaitForEndOfFrame();
         targetMap._isActive = true;
         _playerObject.SetTile(playerPortal.TargetTile.gameObject);
-        Camera.current.transform.position = INITIAL_CAMERA + targetMap._mapShift;
+
+        var originalCameraPosition = Camera.current.transform.position;
+        var newCameraPosition = INITIAL_CAMERA + targetMap._mapShift;
+        var totalTime = 0.5f;
+        var timeLeft = totalTime;
+
+        while (timeLeft > 0)
+        {
+            timeLeft -= Time.deltaTime;
+            Camera.current.transform.position =
+                Vector3.Lerp(originalCameraPosition, newCameraPosition, 1 - (timeLeft / totalTime));
+            yield return new WaitForEndOfFrame();
+        }
     }
 
     private void TransitionAllTiles()
