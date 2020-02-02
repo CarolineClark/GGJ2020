@@ -163,8 +163,7 @@ public class Map : MonoBehaviour
             // check the fence is close. Within an expected value?
             var distance = Vector3.Distance(
                 fence.transform.position,
-                _previousTileState.Player.transform.position);
-            Debug.Log("distance = " + distance.ToString("#.00000000"));
+                _previousTileState.Player.transform.position);;
             if (distance < FENCE_DISTANCE_ON_DIFFERENT_TILE_TO_STOP_PLAYER_EPSILON)
             {
                 return true;
