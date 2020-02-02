@@ -118,14 +118,16 @@ public class Map : MonoBehaviour
             var difference = fence.position - _previousTileState.Player.transform.position;
             if (playerInput.Left)
             {
-                if (Vector2.Distance(difference, new Vector3(0.5f, 0, 0)) < PLAYERTILE_FENCE_EPSILON)
+                var expectedOffset = new Vector3(0.5f, 0, 0);
+                if (Vector2.Distance(difference, expectedOffset) < PLAYERTILE_FENCE_EPSILON)
                 {
                     return true;
                 }
             }
             else if (playerInput.Right)
             {
-                if (Vector2.Distance(difference, new Vector3(0, 0, 0.5f)) < PLAYERTILE_FENCE_EPSILON)
+                var expectedOffset = new Vector3(0, 0, 0.5f);
+                if (Vector2.Distance(difference, expectedOffset) < PLAYERTILE_FENCE_EPSILON)
                 {
                     return true;
                 }
