@@ -376,8 +376,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b541b030457fb4d69bc6c7d512b02949, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   bgSource: {fileID: 1507023945}
   bgIntro: {fileID: 8300000, guid: 9a6798e3b83e048fb89cba138c79bfd0, type: 3}
   bgLoop: {fileID: 8300000, guid: 80ce73f7cd63041c498ffb790ec7167f, type: 3}
@@ -1657,9 +1657,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 742f193459d6946728687ea45bd975b9, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
-  startingTile: {fileID: 1840679189}
+  m_Name: 
+  m_EditorClassIdentifier: 
   playerGraphicObject: {fileID: 233985690}
 --- !u!4 &1436999438
 Transform:
@@ -2024,6 +2023,7 @@ MonoBehaviour:
   - {fileID: 988958994}
   - {fileID: 706202581}
   rotationSpeed: 1000
+  mapIndex: 0
   _transformForward: {x: 0, y: 0, z: 0}
   _transformUp: {x: 0, y: 0, z: 0}
   _transformRight: {x: 0, y: 0, z: 0}

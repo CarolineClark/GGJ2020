@@ -11,10 +11,12 @@ public class Map : MonoBehaviour
     // IMPORTANT  - face0 = faces[0]
     public Tile[] tiles;
     public float rotationSpeed = 200f;
-
+    public int mapIndex = 0;
 
     private Tile _currentTile;
     private CubeController _cubeController;
+    private Vector3 _mapShift;
+    private bool _isActive;
 
     private bool Rotating { get; set; } = false;
 
@@ -34,9 +36,11 @@ public class Map : MonoBehaviour
     private Vector3 APPEARING_RIGHT_TILE_POSITION = new Vector3(0, 0, 10f);
     private Vector3 APPEARING_LEFT_TILE_POSITION = new Vector3(10, 0, 0);
 
+    private Vector3 INITIAL_CAMERA;
+
     private Vector3 OUT_OF_SIGHT = new Vector3(0, 0, -100F);
     private float FENCE_DISTANCE_ON_DIFFERENT_TILE_TO_STOP_PLAYER_EPSILON = 1.1f;
-    private Player _player;
+    private Player _playerObject;
 
     public class TileState
     {
@@ -60,6 +64,20 @@ public class Map : MonoBehaviour
 
     void Start()
     {
+        INITIAL_CAMERA = Camera.main.transform.position;
+
+        _isActive = mapIndex == 0;
+        _mapShift = new Vector3(0, 20f * mapIndex, 0);
+        _playerObject = GameObject.FindWithTag("Player").GetComponent<Player>();
+
+        PLAYER_TILE_POSITION += _mapShift;
+        LEFT_TILE_POSITION += _mapShift;
+        RIGHT_TILE_POSITION += _mapShift;
+        DISAPPEARING_RIGHT_TILE_POSITION += _mapShift;
+        DISAPPEARING_LEFT_TILE_POSITION += _mapShift;
+        APPEARING_RIGHT_TILE_POSITION += _mapShift;
+        APPEARING_LEFT_TILE_POSITION += _mapShift;
+
         _cubeController = GetComponentInChildren<CubeController>();
         foreach (var tile in tiles)
         {
@@ -78,12 +96,17 @@ public class Map : MonoBehaviour
         leftGameObject.transform.position = LEFT_TILE_POSITION;
         rightGameObject.transform.position = RIGHT_TILE_POSITION;
 
+        if (_isActive)
+        {
+            _playerObject.SetTile(playerGameObject);
+        }
+
         _previousTileState = tileState;
     }
 
     void Update()
     {
-        if (!Rotating)
+        if (!Rotating && _isActive)
         {
 
             PlayerInput playerInput =
@@ -106,12 +129,20 @@ public class Map : MonoBehaviour
             {
                 ControlRotateCube(playerInput);
             }
+
+            if (Input.GetKeyDown(KeyCode.Space) && _previousTileState.Player.Portal)
+            {
+                StartCoroutine(Teleport(_previousTileState.Player.Portal));
+            }
         }
     }
 
     private enum FenceLocation
     {
-        None, LeftTile, RightTile, PlayerTile
+        None,
+        LeftTile,
+        RightTile,
+        PlayerTile
     }
 
     private FenceLocation FenceInTheWay(PlayerInput playerInput)
@@ -126,10 +157,12 @@ public class Map : MonoBehaviour
         if (CheckIfInputForcesPlayerIntoFence(playerInputLeft, fenceLeft))
         {
             return FenceLocation.LeftTile;
-        } else if (CheckIfInputForcesPlayerIntoFence(playerInputRight, fenceRight))
+        }
+        else if (CheckIfInputForcesPlayerIntoFence(playerInputRight, fenceRight))
         {
             return FenceLocation.RightTile;
-        } else if (CheckIfInputForcesPlayerIntoFenceOnPlayerTile(playerInput, playerFence))
+        }
+        else if (CheckIfInputForcesPlayerIntoFenceOnPlayerTile(playerInput, playerFence))
         {
             return FenceLocation.PlayerTile;
         }
@@ -170,7 +203,8 @@ public class Map : MonoBehaviour
             // check the fence is close. Within an expected value?
             var distance = Vector3.Distance(
                 fence.transform.position,
-                _previousTileState.Player.transform.position);;
+                _previousTileState.Player.transform.position);
+            ;
             if (distance < FENCE_DISTANCE_ON_DIFFERENT_TILE_TO_STOP_PLAYER_EPSILON)
             {
                 return true;
@@ -185,11 +219,15 @@ public class Map : MonoBehaviour
         if (playerInput.Right)
         {
             SoundManager.instance.PlaySlideFx();
+            _playerObject.SetWalkingAnimation();
+            _playerObject.FlipPlayer(1);
             StartCoroutine(RotateCube(new Vector3(-1, 0, 0)));
         }
         else if (playerInput.Left)
         {
             SoundManager.instance.PlaySlideFx();
+            _playerObject.SetWalkingAnimation();
+            _playerObject.FlipPlayer(-1);
             StartCoroutine(RotateCube(new Vector3(0, 0, 1)));
         }
     }
@@ -214,6 +252,19 @@ public class Map : MonoBehaviour
         }
 
         TransitionAllTiles();
+    }
+
+    private IEnumerator Teleport(Portal playerPortal)
+    {
+        Debug.Log("Teleporting!!");
+        Debug.Log(playerPortal.TargetTile.name);
+        var targetMap = playerPortal.TargetTile.GetComponentInParent<Map>();
+        _isActive = false;
+
+        yield return new WaitForEndOfFrame();
+        targetMap._isActive = true;
+        _playerObject.SetTile(playerPortal.TargetTile.gameObject);
+        Camera.current.transform.position = INITIAL_CAMERA + targetMap._mapShift;
     }
 
     private void TransitionAllTiles()
@@ -330,11 +381,11 @@ public class Map : MonoBehaviour
             var newRotation = oldRotation + angle;
 
             StartCoroutine(
-                    TransitionTileBackAndForth(
-                        playerTileTransform,
-                        playerTileTransform.position,
-                        playerTileTransform.position + offset,
-                        animationTime));
+                TransitionTileBackAndForth(
+                    playerTileTransform,
+                    playerTileTransform.position,
+                    playerTileTransform.position + offset,
+                    animationTime));
             StartCoroutine(
                 TransitionTileBackAndForth(
                     tileTryingToReachTransform,
@@ -427,11 +478,12 @@ public class Map : MonoBehaviour
         Rotating = false;
     }
 
-    private IEnumerator TransitionTileBackAndForth(Transform transform, Vector3 original, Vector3 newPosition, float animationTime)
+    private IEnumerator TransitionTileBackAndForth(Transform transform, Vector3 original, Vector3 newPosition,
+        float animationTime)
     {
         var timeLeft = animationTime;
 
-        while (timeLeft > animationTime/2)
+        while (timeLeft > animationTime / 2)
         {
             timeLeft -= Time.deltaTime;
             transform.position = Vector3.Lerp(original, newPosition, 1 - (timeLeft / animationTime));
@@ -444,6 +496,7 @@ public class Map : MonoBehaviour
             transform.position = Vector3.Lerp(newPosition, original, 1 - (timeLeft / animationTime));
             yield return new WaitForEndOfFrame();
         }
+
         Rotating = false;
     }
 
@@ -474,6 +527,7 @@ public class Map : MonoBehaviour
         }
 
         Rotating = false;
+        _playerObject.SetIdleAnimation();
     }
 
     IEnumerator WobbleTile(Transform transform, float original, float newRotation, float totalTime)
@@ -481,13 +535,14 @@ public class Map : MonoBehaviour
         // var totalTime = 0.5f;
         var timeLeft = totalTime;
 
-        while (timeLeft > totalTime/2)
+        while (timeLeft > totalTime / 2)
         {
             timeLeft -= Time.deltaTime;
             transform.Rotate(0,
                 transform.rotation.eulerAngles.y - Mathf.Lerp(original, newRotation, 1 - (timeLeft / totalTime)), 0);
             yield return new WaitForEndOfFrame();
         }
+
         while (timeLeft > 0)
         {
             timeLeft -= Time.deltaTime;
