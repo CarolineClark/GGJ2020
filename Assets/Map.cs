@@ -101,6 +101,7 @@ public class Map : MonoBehaviour
             _playerObject.SetTile(playerGameObject);
         }
 
+        Debug.Log(tileState);
         _previousTileState = tileState;
     }
 
@@ -150,6 +151,7 @@ public class Map : MonoBehaviour
     private FenceLocation FenceInTheWay(PlayerInput playerInput)
     {
         // check player tile
+        Debug.Log(_previousTileState);
         var playerFence = _previousTileState.Player.Fence;
 
         var playerInputLeft = playerInput.Left;
