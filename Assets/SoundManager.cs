@@ -23,6 +23,7 @@ public class SoundManager : MonoBehaviour
         {
             if (soundManager) return soundManager;
             soundManager = FindObjectOfType(typeof(SoundManager)) as SoundManager;
+            soundManager.StartBgMusic();
             if (!soundManager) Debug.LogError("Need an active SoundManager on a GameObject");
             return soundManager;
         }
@@ -42,7 +43,6 @@ public class SoundManager : MonoBehaviour
     private void Start()
     {
         DontDestroyOnLoad(gameObject);
-        instance.StartBgMusic();
     }
 
     void Update()

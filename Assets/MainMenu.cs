@@ -5,7 +5,6 @@ using UnityEngine.SceneManagement;
 
 public class MainMenu : MonoBehaviour
 {
-    public GameObject blokeyFrame;
     public GameObject gravestoneFrame;
     public GameObject treeFrame;
     public GameObject backgroundFrame;
@@ -37,10 +36,7 @@ public class MainMenu : MonoBehaviour
     {
         var mouseX = (Input.mousePosition.x * 2) / Screen.width;
 
-        var pos = blokeyFrame.transform.position;
-        blokeyFrame.transform.position = new Vector3(mouseX * 10, pos.y, pos.z);
-
-        pos = gravestoneFrame.transform.position;
+        var pos = gravestoneFrame.transform.position;
         gravestoneFrame.transform.position = new Vector3( mouseX * 20, pos.y, pos.z);
 
 
