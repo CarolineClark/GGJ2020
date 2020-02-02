@@ -83,7 +83,12 @@ public class Map : MonoBehaviour
         _previousTileState = tileState;
     }
 
-    private bool FenceInTheWay(PlayerInput playerInput)
+    private enum FenceLocation
+    {
+        None, LeftTile, RightTile, PlayerTile
+    }
+
+    private FenceLocation FenceInTheWay(PlayerInput playerInput)
     {
         // check player tile
         var playerFence = _previousTileState.Player.Fence;
@@ -92,9 +97,18 @@ public class Map : MonoBehaviour
         var fenceLeft = _previousTileState.Left.Fence;
         var playerInputRight = playerInput.Right;
         var fenceRight = _previousTileState.Right.Fence;
-        return CheckIfInputForcesPlayerIntoFence(playerInputLeft, fenceLeft) ||
-               CheckIfInputForcesPlayerIntoFence(playerInputRight, fenceRight) ||
-               CheckIfInputForcesPlayerIntoFenceOnPlayerTile(playerInput, playerFence);
+        if (CheckIfInputForcesPlayerIntoFence(playerInputLeft, fenceLeft))
+        {
+            return FenceLocation.LeftTile;
+        } else if (CheckIfInputForcesPlayerIntoFence(playerInputRight, fenceRight))
+        {
+            return FenceLocation.RightTile;
+        } else if (CheckIfInputForcesPlayerIntoFenceOnPlayerTile(playerInput, playerFence))
+        {
+            return FenceLocation.PlayerTile;
+        }
+
+        return FenceLocation.None;
     }
 
     private bool CheckIfInputForcesPlayerIntoFenceOnPlayerTile(PlayerInput playerInput, Transform fence)
@@ -109,7 +123,7 @@ public class Map : MonoBehaviour
                     return true;
                 }
             }
-            else if (playerInput.Left)
+            else if (playerInput.Right)
             {
                 if (Vector2.Distance(difference, new Vector3(0, 0, 0.5f)) < PLAYERTILE_FENCE_EPSILON)
                 {
@@ -146,11 +160,53 @@ public class Map : MonoBehaviour
         {
             PlayerInput playerInput =
                 new PlayerInput(Input.GetKeyDown(KeyCode.LeftArrow), Input.GetKeyDown(KeyCode.RightArrow));
-            if (!FenceInTheWay(playerInput))
+            var fenceLocation = FenceInTheWay(playerInput);
+            if (fenceLocation != FenceLocation.None)
+            {
+                Debug.Log(fenceLocation);
+                // bounce transition
+                BounceTiles(fenceLocation, _previousTileState, playerInput);
+
+            }
+            else
             {
                 ControlRotateCube(playerInput);
             }
         }
+    }
+
+    private void ControlRotateCube(PlayerInput playerInput)
+    {
+        if (playerInput.Right)
+        {
+            StartCoroutine(RotateCube(new Vector3(-1, 0, 0)));
+        }
+        else if (playerInput.Left)
+        {
+            StartCoroutine(RotateCube(new Vector3(0, 0, 1)));
+        }
+    }
+
+    private IEnumerator RotateCube(Vector3 rotation)
+    {
+        Rotating = true;
+        var angleLeft = 90f;
+        while (angleLeft > 0)
+        {
+            var angleThisFrame = Time.deltaTime * rotationSpeed;
+            angleLeft -= angleThisFrame;
+            if (angleLeft < 0)
+            {
+                angleThisFrame += angleLeft;
+            }
+
+            _cubeController.transform.Rotate(angleThisFrame * rotation.x, angleThisFrame * rotation.y,
+                angleThisFrame * rotation.z, Space.World);
+
+            yield return new WaitForEndOfFrame();
+        }
+
+        TransitionAllTiles();
     }
 
     private void TransitionAllTiles()
@@ -160,128 +216,9 @@ public class Map : MonoBehaviour
         _previousTileState = tileState;
     }
 
-    private void TransitionToNewTileState(TileState previousTileState, TileState newTileState)
-    {
-        if (previousTileState.Left == newTileState.Left)
-        {
-            TransitionRightMovement(previousTileState, newTileState);
-        }
-        else if (previousTileState.Right == newTileState.Right)
-        {
-            TransitionLeftMovement(previousTileState, newTileState);
-        }
-    }
-
-    public void rotateY(Transform transform, float angle)
-    {
-        transform.Rotate(0, transform.rotation.eulerAngles.y - angle, 0);
-    }
-
-    private void TransitionLeftMovement(TileState previousTileState, TileState newTileState)
-    {
-        var previousPlayerPosition = previousTileState.Player.transform.position;
-        var playerPosition = newTileState.Player.transform.position;
-        StartCoroutine(
-            TransitionTileThatDisappears(
-                previousTileState.Player.transform,
-                previousPlayerPosition,
-                DISAPPEARING_RIGHT_TILE_POSITION,
-                OUT_OF_SIGHT));
-        StartCoroutine(
-            TransitionTile(
-                newTileState.Player.transform,
-                playerPosition,
-                PLAYER_TILE_POSITION));
-        StartCoroutine(
-            TransitionTile(
-                newTileState.Left.transform,
-                APPEARING_LEFT_TILE_POSITION,
-                LEFT_TILE_POSITION));
-
-        var newRotation = newTileState.RightRotation;
-        if (newRotation < previousTileState.RightRotation)
-        {
-            newRotation += 360;
-        }
-
-        StartCoroutine(RotateTile(newTileState.Right.transform, previousTileState.RightRotation,
-            newRotation));
-        rotateY(newTileState.Left.gameObject.transform, newTileState.LeftRotation);
-    }
-
-    private void TransitionRightMovement(TileState previousTileState, TileState newTileState)
-    {
-        var previousPlayerPosition = previousTileState.Player.transform.position;
-        var playerPosition = newTileState.Player.transform.position;
-        StartCoroutine(
-            TransitionTileThatDisappears(
-                previousTileState.Player.transform,
-                previousPlayerPosition,
-                DISAPPEARING_LEFT_TILE_POSITION,
-                OUT_OF_SIGHT));
-        StartCoroutine(
-            TransitionTile(
-                newTileState.Player.transform,
-                playerPosition,
-                PLAYER_TILE_POSITION));
-        StartCoroutine(
-            TransitionTile(
-                newTileState.Right.transform,
-                APPEARING_RIGHT_TILE_POSITION,
-                RIGHT_TILE_POSITION));
-
-        var newRotation = newTileState.LeftRotation;
-        if (newRotation > previousTileState.LeftRotation)
-        {
-            newRotation -= 360;
-        }
-
-        StartCoroutine(RotateTile(newTileState.Left.transform, previousTileState.LeftRotation,
-            newRotation));
-        rotateY(newTileState.Right.gameObject.transform, newTileState.RightRotation);
-    }
-
-    IEnumerator TransitionTileThatDisappears(Transform transform, Vector3 original, Vector3 newPosition,
-        Vector3 disappearingPosition)
-    {
-        yield return TransitionTile(transform, original, newPosition);
-        transform.position = disappearingPosition;
-    }
-
-    IEnumerator TransitionTile(Transform transform, Vector3 original, Vector3 newPosition)
-    {
-        var totalTime = 0.5f;
-        var timeLeft = totalTime;
-
-        while (timeLeft > 0)
-        {
-            timeLeft -= Time.deltaTime;
-            transform.position = Vector3.Lerp(original, newPosition, 1 - (timeLeft / totalTime));
-            yield return new WaitForEndOfFrame();
-        }
-
-        Rotating = false;
-    }
-
-    IEnumerator RotateTile(Transform transform, float original, float newRotation)
-    {
-        var totalTime = 0.5f;
-        var timeLeft = totalTime;
-
-        while (timeLeft > 0)
-        {
-            timeLeft -= Time.deltaTime;
-            transform.Rotate(0,
-                transform.rotation.eulerAngles.y - Mathf.Lerp(original, newRotation, 1 - (timeLeft / totalTime)), 0);
-            yield return new WaitForEndOfFrame();
-        }
-
-        Rotating = false;
-    }
-
-    // If you want the right tiles, talk to ME
     public TileState MapCubeRotationToTilesVisible()
     {
+        // If you want the right tiles, talk to ME
         var normalVectors = new List<Vector3>();
         _transformForward = _cubeController.transform.forward;
         var _transformBack = -_transformForward;
@@ -357,37 +294,183 @@ public class Map : MonoBehaviour
             leftRotation);
     }
 
-    private void ControlRotateCube(PlayerInput playerInput)
+    private void TransitionToNewTileState(TileState previousTileState, TileState newTileState)
     {
-        if (playerInput.Right)
+        if (previousTileState.Left == newTileState.Left)
         {
-            StartCoroutine(RotateCube(new Vector3(-1, 0, 0)));
+            TransitionRightMovement(previousTileState, newTileState);
         }
-        else if (playerInput.Left)
+        else if (previousTileState.Right == newTileState.Right)
         {
-            StartCoroutine(RotateCube(new Vector3(0, 0, 1)));
+            TransitionLeftMovement(previousTileState, newTileState);
         }
     }
 
-    private IEnumerator RotateCube(Vector3 rotation)
+    private void BounceTiles(FenceLocation fenceLocation, TileState tileState, PlayerInput playerInput)
     {
-        Rotating = true;
-        var angleLeft = 90f;
-        while (angleLeft > 0)
+        if (fenceLocation == FenceLocation.PlayerTile)
         {
-            var angleThisFrame = Time.deltaTime * rotationSpeed;
-            angleLeft -= angleThisFrame;
-            if (angleLeft < 0)
-            {
-                angleThisFrame += angleLeft;
-            }
+            Vector3 offset = (playerInput.Left) ? new Vector3(-1, 0, 0) : new Vector3(0, 0, -1);
+            var playerTileTransform = tileState.Player.transform;
+            var otherTileTransform = (playerInput.Left) ? tileState.Left.transform : tileState.Right.transform;
+            StartCoroutine(
+                TransitionTileBackAndForth(
+                    playerTileTransform,
+                    playerTileTransform.position,
+                    playerTileTransform.position + offset,
+                    0.1f));
+            StartCoroutine(
+                TransitionTileBackAndForth(
+                otherTileTransform,
+                otherTileTransform.position,
+                otherTileTransform.position + offset,
+                0.1f));
+        }
+        else
+        {
+            Vector3 offset = (fenceLocation == FenceLocation.LeftTile) ? new Vector3(-1, 0, 0) : new Vector3(0, 0, -1);
+            var playerTileTransform = tileState.Player.transform;
+            var otherTileTransform = (playerInput.Left) ? tileState.Left.transform : tileState.Right.transform;
+            StartCoroutine(TransitionTileBackAndForth(
+                playerTileTransform,
+                playerTileTransform.position,
+                playerTileTransform.position + offset,
+                0.1f));
+            StartCoroutine(TransitionTileBackAndForth(
+                otherTileTransform,
+                otherTileTransform.position,
+                otherTileTransform.position + offset,
+                0.1f));
+        }
+    }
 
-            _cubeController.transform.Rotate(angleThisFrame * rotation.x, angleThisFrame * rotation.y,
-                angleThisFrame * rotation.z, Space.World);
+    public void rotateY(Transform transform, float angle)
+    {
+        transform.Rotate(0, transform.rotation.eulerAngles.y - angle, 0);
+    }
 
+    private void TransitionLeftMovement(TileState previousTileState, TileState newTileState)
+    {
+        var previousPlayerPosition = previousTileState.Player.transform.position;
+        var playerPosition = newTileState.Player.transform.position;
+        StartCoroutine(
+            TransitionTileThatDisappears(
+                previousTileState.Player.transform,
+                previousPlayerPosition,
+                DISAPPEARING_RIGHT_TILE_POSITION,
+                OUT_OF_SIGHT));
+        StartCoroutine(
+            TransitionTileAndStopRotating(
+                newTileState.Player.transform,
+                playerPosition,
+                PLAYER_TILE_POSITION));
+        StartCoroutine(
+            TransitionTileAndStopRotating(
+                newTileState.Left.transform,
+                APPEARING_LEFT_TILE_POSITION,
+                LEFT_TILE_POSITION));
+
+        var newRotation = newTileState.RightRotation;
+        if (newRotation < previousTileState.RightRotation)
+        {
+            newRotation += 360;
+        }
+
+        StartCoroutine(RotateTile(newTileState.Right.transform, previousTileState.RightRotation,
+            newRotation));
+        rotateY(newTileState.Left.gameObject.transform, newTileState.LeftRotation);
+    }
+
+    private void TransitionRightMovement(TileState previousTileState, TileState newTileState)
+    {
+        var previousPlayerPosition = previousTileState.Player.transform.position;
+        var playerPosition = newTileState.Player.transform.position;
+        StartCoroutine(
+            TransitionTileThatDisappears(
+                previousTileState.Player.transform,
+                previousPlayerPosition,
+                DISAPPEARING_LEFT_TILE_POSITION,
+                OUT_OF_SIGHT));
+        StartCoroutine(
+            TransitionTileAndStopRotating(
+                newTileState.Player.transform,
+                playerPosition,
+                PLAYER_TILE_POSITION));
+        StartCoroutine(
+            TransitionTileAndStopRotating(
+                newTileState.Right.transform,
+                APPEARING_RIGHT_TILE_POSITION,
+                RIGHT_TILE_POSITION));
+
+        var newRotation = newTileState.LeftRotation;
+        if (newRotation > previousTileState.LeftRotation)
+        {
+            newRotation -= 360;
+        }
+
+        StartCoroutine(RotateTile(newTileState.Left.transform, previousTileState.LeftRotation,
+            newRotation));
+        rotateY(newTileState.Right.gameObject.transform, newTileState.RightRotation);
+    }
+
+    IEnumerator TransitionTileThatDisappears(Transform transform, Vector3 original, Vector3 newPosition,
+        Vector3 disappearingPosition)
+    {
+        yield return TransitionTileAndStopRotating(transform, original, newPosition);
+        transform.position = disappearingPosition;
+    }
+
+    IEnumerator TransitionTileAndStopRotating(Transform transform, Vector3 original, Vector3 newPosition)
+    {
+        yield return TransitionTile(transform, original, newPosition);
+        Rotating = false;
+    }
+
+    private static IEnumerator TransitionTileBackAndForth(Transform transform, Vector3 original, Vector3 newPosition, float animationTime)
+    {
+        var timeLeft = animationTime;
+
+        while (timeLeft > animationTime/2)
+        {
+            timeLeft -= Time.deltaTime;
+            transform.position = Vector3.Lerp(original, newPosition, 1 - (timeLeft / animationTime));
             yield return new WaitForEndOfFrame();
         }
 
-        TransitionAllTiles();
+        while (timeLeft > 0)
+        {
+            timeLeft -= Time.deltaTime;
+            transform.position = Vector3.Lerp(newPosition, original, 1 - (timeLeft / animationTime));
+            yield return new WaitForEndOfFrame();
+        }
+    }
+
+    private static IEnumerator TransitionTile(Transform transform, Vector3 original, Vector3 newPosition)
+    {
+        var totalTime = 0.5f;
+        var timeLeft = totalTime;
+
+        while (timeLeft > 0)
+        {
+            timeLeft -= Time.deltaTime;
+            transform.position = Vector3.Lerp(original, newPosition, 1 - (timeLeft / totalTime));
+            yield return new WaitForEndOfFrame();
+        }
+    }
+
+    IEnumerator RotateTile(Transform transform, float original, float newRotation)
+    {
+        var totalTime = 0.5f;
+        var timeLeft = totalTime;
+
+        while (timeLeft > 0)
+        {
+            timeLeft -= Time.deltaTime;
+            transform.Rotate(0,
+                transform.rotation.eulerAngles.y - Mathf.Lerp(original, newRotation, 1 - (timeLeft / totalTime)), 0);
+            yield return new WaitForEndOfFrame();
+        }
+
+        Rotating = false;
     }
 }
