@@ -16,7 +16,7 @@ public class Player : MonoBehaviour
     public void SetTile(GameObject tile)
     {
         var pos = tile.transform.position;
-        transform.position = new Vector3(pos.x + 1f, pos.y + 0.75f, pos.z);
+        transform.position = new Vector3(pos.x - 0.2f, pos.y + 0.1f, pos.z - 0.3f);
         playerGraphicObject.transform.rotation = Quaternion.Euler(0, -135, 0);
     }
 
@@ -32,9 +32,8 @@ public class Player : MonoBehaviour
 
     public void FlipPlayer(int dir)
     {
-        var angleThisFrame = dir < 0 ? 30 : -30;
-        var rotation = transform.rotation;
-        transform.Rotate(angleThisFrame * rotation.x, angleThisFrame * rotation.y,
-            angleThisFrame * rotation.z, Space.World);
+        var rotation = dir < 0 ?  new Vector3(0, 90, 0) : new Vector3(0, 0, 0);
+        transform.rotation = Quaternion.Euler(rotation);
+        // transform.Rotate(rotation, Space.World);
     }
 }
