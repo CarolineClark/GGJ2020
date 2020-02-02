@@ -84,6 +84,7 @@ public class Map : MonoBehaviour
     {
         if (!Rotating)
         {
+
             PlayerInput playerInput =
                 new PlayerInput(Input.GetKeyDown(KeyCode.LeftArrow), Input.GetKeyDown(KeyCode.RightArrow), Input.GetKeyDown(KeyCode.Space));
 
@@ -97,8 +98,8 @@ public class Map : MonoBehaviour
             var fenceLocation = FenceInTheWay(playerInput);
             if (fenceLocation != FenceLocation.None)
             {
+                SoundManager.instance.PlayBounceFx();
                 BounceTiles(fenceLocation, _previousTileState, playerInput);
-
             }
             else
             {
@@ -182,10 +183,12 @@ public class Map : MonoBehaviour
     {
         if (playerInput.Right)
         {
+            SoundManager.instance.PlaySlideFx();
             StartCoroutine(RotateCube(new Vector3(-1, 0, 0)));
         }
         else if (playerInput.Left)
         {
+            SoundManager.instance.PlaySlideFx();
             StartCoroutine(RotateCube(new Vector3(0, 0, 1)));
         }
     }
