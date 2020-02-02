@@ -9,6 +9,7 @@ public class MainMenu : MonoBehaviour
     public GameObject gravestoneFrame;
     public GameObject treeFrame;
     public GameObject backgroundFrame;
+    public string firstScene;
 
     private void Update()
     {
@@ -22,7 +23,8 @@ public class MainMenu : MonoBehaviour
 
     public void PlayGame()
     {
-        SceneManager.LoadScene("Scenes/SampleScene");
+        SoundManager.instance.PlayBounceFx();
+        SceneManager.LoadScene(firstScene);
     }
 
     public void QuitGame()
