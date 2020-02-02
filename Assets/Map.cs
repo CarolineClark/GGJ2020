@@ -38,7 +38,7 @@ public class Map : MonoBehaviour
     private Vector3 APPEARING_LEFT_TILE_POSITION = new Vector3(10, 0, 0);
 
     private Vector3 OUT_OF_SIGHT = new Vector3(0, 0, -100F);
-    private float FENCE_DISTANCE_ON_DIFFERENT_TILE_TO_STOP_PLAYER_EPSILON = 1f;
+    private float FENCE_DISTANCE_ON_DIFFERENT_TILE_TO_STOP_PLAYER_EPSILON = 1.1f;
 
     public class TileState
     {
@@ -164,6 +164,7 @@ public class Map : MonoBehaviour
             var distance = Vector3.Distance(
                 fence.transform.position,
                 _previousTileState.Player.transform.position);
+            Debug.Log("distance = " + distance.ToString("#.00000000"));
             if (distance < FENCE_DISTANCE_ON_DIFFERENT_TILE_TO_STOP_PLAYER_EPSILON)
             {
                 return true;
