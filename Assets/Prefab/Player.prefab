@@ -116,8 +116,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3295895664834313287}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 3.0141096, y: 6.185978, z: 7.959837}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 3295895665208784133}
@@ -454,7 +454,7 @@ GameObject:
   - component: {fileID: 3295895665208784132}
   m_Layer: 0
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -488,7 +488,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 742f193459d6946728687ea45bd975b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startingTile: {fileID: 0}
   playerGraphicObject: {fileID: 6274518110112069403}
 --- !u!95 &3295895665208784132
 Animator:
@@ -868,8 +867,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3295895665571955566}
-  m_LocalRotation: {x: 0.1321244, y: 0.020060789, z: 0.0013538374, w: 0.9910292}
-  m_LocalPosition: {x: 3.0133905, y: 7.073226, z: 7.869119}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 3295895666184261796}
@@ -2226,6 +2225,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: PlayerSVG
+      objectReference: {fileID: 0}
+    - target: {fileID: -383140910311593387, guid: 752bb6da974a74116aebf8fc06730ca4,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1386352088579845589, guid: 752bb6da974a74116aebf8fc06730ca4,
         type: 3}
