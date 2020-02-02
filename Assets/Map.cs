@@ -85,7 +85,15 @@ public class Map : MonoBehaviour
         if (!Rotating)
         {
             PlayerInput playerInput =
-                new PlayerInput(Input.GetKeyDown(KeyCode.LeftArrow), Input.GetKeyDown(KeyCode.RightArrow));
+                new PlayerInput(Input.GetKeyDown(KeyCode.LeftArrow), Input.GetKeyDown(KeyCode.RightArrow), Input.GetKeyDown(KeyCode.Space));
+
+            if (playerInput.Interact) {
+                var goals = FindObjectsOfType<Goal>();
+                foreach (var goal in goals) {
+                    goal.Interact();
+                }
+            }
+
             var fenceLocation = FenceInTheWay(playerInput);
             if (fenceLocation != FenceLocation.None)
             {
